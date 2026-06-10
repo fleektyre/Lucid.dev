@@ -1,6 +1,6 @@
 {
-  "name": "lucid.dev",
-  "description": "A cinematic AI-powered application builder for high-fidelity UI generation.",
+  "name": "Lucid Architecture",
+  "description": "High-fidelity AI-powered application builder for production-ready software manifestations.",
   "requestFramePermissions": [],
   "majorCapabilities": [
     "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"

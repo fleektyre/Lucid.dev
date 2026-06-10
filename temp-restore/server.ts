@@ -1,11 +1,9 @@
 import express from "express";
 import path from "path";
-import fs from "fs";
 import { createServer as createViteServer } from "vite";
 import { GoogleGenAI } from "@google/genai";
 import { createClient } from "@supabase/supabase-js";
 import { z } from "zod";
-import JSZip from "jszip";
 
 // --- ENV VALIDATION ---
 const supabaseUrl = process.env.SUPABASE_URL;
@@ -160,44 +158,6 @@ async function startServer() {
 
       res.status(400).json({ status: "failed", message: data.message || "Verification failed" });
     } catch (err) {
-      res.status(500).json({ error: (err as Error).message });
-    }
-  });
-
-  // --- PROJECT EXPORT ---
-  app.get("/api/export-zip", async (req, res) => {
-    try {
-      const zip = new JSZip();
-      const rootDir = process.cwd();
-
-      const addDirectoryToZip = (currentPath: string, zipFolder: JSZip) => {
-        const files = fs.readdirSync(currentPath);
-
-        for (const file of files) {
-          const fullPath = path.join(currentPath, file);
-          const stat = fs.statSync(fullPath);
-
-          // Exclude build artifacts and standard ignore patterns
-          if (['node_modules', '.next', 'dist', '.git', '.ais', 'out'].includes(file)) continue;
-
-          if (stat.isDirectory()) {
-            const folder = zipFolder.folder(file);
-            if (folder) addDirectoryToZip(fullPath, folder);
-          } else {
-            const content = fs.readFileSync(fullPath);
-            zipFolder.file(file, content);
-          }
-        }
-      };
-
-      addDirectoryToZip(rootDir, zip);
-      const content = await zip.generateAsync({ type: "nodebuffer" });
-
-      res.setHeader("Content-Type", "application/zip");
-      res.setHeader("Content-Disposition", "attachment; filename=lucid-dev-export.zip");
-      res.send(content);
-    } catch (err) {
-      console.error("Export failed:", err);
       res.status(500).json({ error: (err as Error).message });
     }
   });
