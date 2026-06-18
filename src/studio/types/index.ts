@@ -20,3 +20,12 @@ export interface AIState {
   latency: number;
   model: string;
 }
+
+export interface AppNotification {
+  id: string;
+  type: 'ai' | 'billing' | 'error' | 'info';
+  title: string;
+  message: string;
+  read: boolean;
+  timestamp: string;
+}

@@ -1,41 +1,80 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { StudioBackground } from '../components/StudioBackground';
+import { CelestialHorizon } from '../components/CelestialHorizon';
 import { Sidebar } from '../layout/Sidebar';
 import { TopNav } from '../layout/TopNav';
 import { AIPanel } from '../panels/AIPanel';
-import { PreviewCards } from '../panels/PreviewCards';
+import { SettingsView } from './SettingsView';
+import { useStudioStore } from '../store/useStudioStore';
+import { PricingModal } from '../components/PricingModal';
 
 const StudioWorkspace: React.FC = () => {
+  const { isSidebarExpanded, showPricingModal, setShowPricingModal, currentView } = useStudioStore();
+
+  const [isMd, setIsMd] = useState(typeof window !== 'undefined' ? window.innerWidth >= 768 : true);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMd(window.innerWidth >= 768);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   return (
-    <div className="relative min-h-screen w-full bg-[#050505] text-white overflow-hidden selection:bg-accent/30 selection:text-white">
-      {/* Cinematic Studio Background */}
-      <StudioBackground src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260508_064209_0cb7d815-ff61-4caa-a6d5-bbff145ab272.mp4" />
+    <div className="relative min-h-screen w-full bg-[#050505] text-white overflow-hidden selection:bg-emerald-500/20 selection:text-white font-sans font-normal">
+      {/* Cinematic Studio Background - Atmosphere MP4 */}
+      <StudioBackground src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260418_094631_d30ab262-45ee-4b7d-99f3-5d5848c8ef13.mp4" />
+
+      {/* Blue planet-edge curved lighting arc */}
+      <CelestialHorizon />
 
       {/* Floating Layout Layer */}
-      <Sidebar />
-      <TopNav />
+      {currentView !== 'settings' && (
+        <>
+          <Sidebar />
+          <TopNav />
+        </>
+      )}
       
       {/* Decorative Overlays */}
       <div className="fixed inset-0 pointer-events-none z-0">
-        <div className="absolute top-0 left-0 right-0 h-40 bg-gradient-to-b from-black/60 to-transparent" />
-        <div className="absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-black/60 to-transparent" />
+        <div className="absolute top-0 left-0 right-0 h-40 bg-gradient-to-b from-black/80 to-transparent" />
+        <div className="absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-black/85 to-transparent" />
       </div>
 
-      {/* Main Content Workspace */}
-      <main className="relative z-10 pt-32 pl-[116px] pr-6 pb-6 min-h-screen flex flex-col items-center">
-        <div className="w-full max-w-[1200px] flex flex-col items-center pt-20">
-          <AIPanel />
+      {/* Main Content Workspace with smooth dynamic sidebar padding shift */}
+      <motion.main 
+        animate={{ 
+          paddingLeft: currentView === 'settings' ? 0 : (isSidebarExpanded && isMd ? 260 : 0)
+        }}
+        transition={{ type: 'spring', damping: 28, stiffness: 220 }}
+        className={`relative z-10 pr-0 pb-16 min-h-screen flex flex-col items-center justify-start ${
+          currentView === 'settings' ? 'pt-8 w-full' : 'pt-32'
+        }`}
+      >
+        
+        {/* BACKGROUND WORKSPACE GRID AND FRAMING CONTAINER */}
+        <div className={`relative w-full mx-auto py-10 px-4 transition-all duration-300 ${
+          currentView === 'settings' ? 'max-w-[1500px]' : 'max-w-[1000px] flex flex-col items-center'
+        }`}>
+          
+          {/* Centralized AI chat primary interface or high-fidelity settings tab */}
+          <div className="relative z-10 w-full flex flex-col items-center">
+            {currentView === 'settings' ? (
+              <SettingsView />
+            ) : (
+              <AIPanel />
+            )}
+          </div>
         </div>
-      </main>
+      </motion.main>
 
-      {/* Floating Preview Panels */}
-      <div className="fixed inset-0 pointer-events-none z-20">
-        <PreviewCards />
-      </div>
+      {/* Floating Preview Panels removed as requested */}
 
       {/* Cinematic Noise Texture */}
-      <div className="fixed inset-0 pointer-events-none z-[100] opacity-[0.02] mix-blend-overlay">
+      <div className="fixed inset-0 pointer-events-none z-[100] opacity-[0.015] mix-blend-overlay">
         <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" className="w-full h-full opacity-50">
           <filter id="noise">
             <feTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" stitchTiles="stitch" />
@@ -44,15 +83,8 @@ const StudioWorkspace: React.FC = () => {
         </svg>
       </div>
 
-      {/* Bottom Floating Terminal Indicator */}
-      <div className="fixed bottom-10 left-1/2 -translate-x-1/2 flex items-center gap-4 bg-black/40 backdrop-blur-xl border border-white/5 px-6 py-2 rounded-full z-40">
-        <div className="flex gap-1.5">
-          {[1,2,3].map(i => <div key={i} className="w-1 h-3 rounded-full bg-accent/40" />)}
-        </div>
-        <span className="text-[9px] font-bold uppercase tracking-[0.3em] text-white/40">Studio Session Verified</span>
-        <div className="h-4 w-px bg-white/10" />
-        <span className="text-[9px] font-mono text-accent">0x7F4...A2</span>
-      </div>
+      {/* Modern interactive Pricing Overlay */}
+      <PricingModal isOpen={showPricingModal} onClose={() => setShowPricingModal(false)} />
     </div>
   );
 };

@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { CinematicDeployments } from './CinematicDeployments';
 import { 
   ArrowUpRight, 
   Check, 
@@ -370,12 +371,12 @@ const LucidLiveBuilder = () => {
 const Navbar = ({ onViewChange, currentView }: { onViewChange: (v: any) => void; currentView: string }) => {
   const navigate = useNavigate();
   const scrollToSection = (id: string) => {
-    if (currentView !== 'landing') {
-      onViewChange('landing');
+    if (window.location.pathname !== '/') {
+      navigate('/');
       setTimeout(() => {
         const el = document.getElementById(id);
         el?.scrollIntoView({ behavior: 'smooth' });
-      }, 100);
+      }, 200);
     } else {
       const el = document.getElementById(id);
       el?.scrollIntoView({ behavior: 'smooth' });
@@ -393,8 +394,11 @@ const Navbar = ({ onViewChange, currentView }: { onViewChange: (v: any) => void;
         <div className="glass-pill flex items-center gap-2 p-1.5 px-3 shadow-2xl backdrop-blur-3xl border border-white/5">
           <button 
             onClick={() => {
-              onViewChange('landing');
-              window.scrollTo({ top: 0, behavior: 'smooth' });
+              if (window.location.pathname !== '/') {
+                navigate('/');
+              } else {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }
             }}
             className="w-10 h-10 rounded-full bg-white text-black flex items-center justify-center font-heading text-2xl italic hover:scale-110 transition-transform flex-shrink-0"
           >
@@ -404,11 +408,17 @@ const Navbar = ({ onViewChange, currentView }: { onViewChange: (v: any) => void;
             {[
               { label: 'Home', id: 'hero' },
               { label: 'Features', id: 'features-section' },
-              { label: 'Pricing', id: 'pricing-section' }
+              { label: 'Pricing', path: '/pricing' }
             ].map((item: any) => (
               <button 
                 key={item.label} 
-                onClick={() => scrollToSection(item.id)}
+                onClick={() => {
+                  if (item.path) {
+                    navigate(item.path);
+                  } else {
+                    scrollToSection(item.id);
+                  }
+                }}
                 className="px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-white/40 hover:text-white transition-colors"
               >
                 {item.label}
@@ -565,47 +575,45 @@ const ChatBox = ({ className = "", onExecute }: { className?: string, onExecute?
   );
 };
 
-const PremiumCanvasPreview = ({ onExecute }: { onExecute?: (p: string) => void }) => (
-  <div className="relative w-full h-full min-h-[460px] bg-[#030303] flex items-center justify-center p-2 md:p-8 overflow-hidden rounded-[3.5rem] group/premium">
-    {/* Cinematic Background Video Layer */}
-    <FadingVideo 
-      src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260418_094723_095696f9-03b5-4f45-bb60-141bb7c73fa7.mp4"
-      className="absolute inset-0 w-full h-full object-cover z-0 select-none grayscale-[0.4]"
-      opacity={0.3}
-    />
-    
-    <div className="absolute inset-0 bg-[radial-gradient(#ffffff08_1px,transparent_1px)] bg-[size:32px_32px] z-10" />
-    <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/20 via-transparent to-transparent opacity-60 z-10" />
-    
-    {/* Large ChatBox Integration */}
-    <div className="relative z-20 w-full h-full">
-      <ChatBox className="!rounded-[2.5rem]" onExecute={onExecute} />
-    </div>
+const LightweightCompilationLog = () => {
+  const steps = [
+    { cmd: 'lucid compile src/app.tsx', result: 'Reading abstract syntax tree...' },
+    { cmd: 'bundling production-optimized chunks...', result: '✓ 142 modules transformed and optimized.' },
+    { cmd: 'dist/assets/index-D7h2b9s2.js', result: '420.21 kB │ gzip: 108.45 kB' },
+    { cmd: 'dist/assets/index-C8a1b0a3.css', result: '89.14 kB  │ gzip: 21.02 kB' },
+    { cmd: '✓ Build completed in 420ms', result: 'Direct compilation complete. Hot module stream online.' }
+  ];
 
-    {/* Floating Particles */}
-    {[...Array(6)].map((_, i) => (
-      <motion.div
-         key={i}
-         animate={{ 
-           y: [0, -100, 0],
-           opacity: [0, 0.4, 0],
-           scale: [0.3, 0.6, 0.3]
-         }}
-         transition={{ 
-           duration: 8 + i, 
-           repeat: Infinity, 
-           delay: i * 2,
-           ease: "easeInOut"
-         }}
-         className="absolute w-1 h-1 bg-white/30 rounded-full z-10"
-         style={{ 
-           left: `${15 + i * 15}%`,
-           bottom: '-10%'
-         }}
-      />
-    ))}
-  </div>
-);
+  return (
+    <div className="relative w-full h-full min-h-[400px] bg-black/85 flex flex-col p-8 sm:p-12 overflow-hidden rounded-[3rem] border border-white/5 font-mono shadow-2xl z-10 select-none justify-center">
+      <div className="flex items-center gap-2 mb-8 opacity-40">
+        <div className="w-3 h-3 rounded-full bg-red-500/30" />
+        <div className="w-3 h-3 rounded-full bg-yellow-500/30" />
+        <div className="w-3 h-3 rounded-full bg-emerald-500/30" />
+      </div>
+      <div className="space-y-6">
+        {steps.map((step, i) => (
+          <motion.div
+            key={i}
+            initial={{ opacity: 0, x: -15 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: i * 0.08 }}
+            className="flex flex-col gap-2"
+          >
+            <div className="text-xs sm:text-sm text-white/50 flex items-center gap-2">
+              <span className="text-emerald-400 font-sans tracking-wide">➜</span>
+              <span className="text-white/80 font-semibold">{step.cmd}</span>
+            </div>
+            {step.result && (
+              <span className="text-xs sm:text-sm text-white/30 pl-5 leading-normal font-light">{step.result}</span>
+            )}
+          </motion.div>
+        ))}
+      </div>
+    </div>
+  );
+};
 
 const VisualFlow = () => (
   <div className="relative w-full aspect-video glass-card rounded-[3rem] p-12 flex items-center justify-center overflow-hidden bg-black/60 group">
@@ -992,7 +1000,7 @@ const FinalCTAFAQSection = ({ onViewChange }: { onViewChange: (v: any) => void }
     },
     { 
       q: "What AI models power the architecture?", 
-      a: "We use a hybrid synthesis of Claude 3.5 Sonnet, Gemini 1.5 Pro, and our proprietary Lucid Reasoning layer to ensure architectural integrity." 
+      a: "We use a hybrid vibe of Claude 3.5 Sonnet, Gemini 1.5 Pro, and our proprietary Lucid Reasoning layer to ensure architectural integrity." 
     }
   ];
 
@@ -1302,7 +1310,7 @@ const LandingView = ({ onViewChange, onStartBuilding }: { onViewChange: (v: any)
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
-          className="relative z-10 mb-20 w-full max-w-4xl"
+          className="relative z-10 mb-20 w-full max-w-5xl lg:max-w-6xl px-4"
         >
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
@@ -1312,8 +1320,9 @@ const LandingView = ({ onViewChange, onStartBuilding }: { onViewChange: (v: any)
             Universal Application Engine
           </motion.div>
           
-          <h1 className="text-6xl md:text-8xl lg:text-[7.5rem] font-medium leading-[0.8] tracking-tight text-white mb-10">
-            Turn Imagination<br />Into <span className="font-heading italic">Production Software.</span>
+          <h1 className="text-5xl sm:text-7xl md:text-8xl lg:text-[6.5rem] xl:text-[7.2rem] font-medium leading-[1.05] tracking-tight text-white mb-10">
+            Turn Imagination <br className="hidden md:inline" />
+            Into <span className="font-heading italic font-normal">Production Software.</span>
           </h1>
           
           <p className="text-white/40 max-w-2xl mx-auto text-xl font-light mb-14 leading-relaxed">
@@ -1348,14 +1357,14 @@ const LandingView = ({ onViewChange, onStartBuilding }: { onViewChange: (v: any)
         </div>
       </section>
 
-      {/* Section 2: LIVE BUILDER */}
+      {/* Section 2: ZERO-CONFIG COMPILATION */}
       <div id="features-section">
         <FeatureSection
-          title="Intuitive Canvas"
-          description="Design with a native feeling. Our canvas is built for speed and precision."
-          tags={["Direct Manipulation", "Auto-Layout", "Real-time Sync"]}
-          icon={<Palette className="w-6 h-6" />}
-          preview={<PremiumCanvasPreview onExecute={onStartBuilding} />}
+          title="Predictive Compilation Engine"
+          description="Build and deploy with zero configurations. We compile AST-level edits down to modularized ESM in under 420ms, stream hot modules, and keep codebases safe."
+          tags={["Direct Compilation", "ESM Bundle Output", "Under 420ms Latency"]}
+          icon={<Terminal className="w-6 h-6 text-emerald-400" />}
+          preview={<LightweightCompilationLog />}
         />
       </div>
       <LucidLiveBuilder />
@@ -1467,17 +1476,17 @@ const LandingView = ({ onViewChange, onStartBuilding }: { onViewChange: (v: any)
         </div>
       </section>
 
-      {/* Section 5: AI ROUTING ENGINE */}
+      {/* Section 5: CINEMATIC EDGE DEPLOYMENTS */}
       <section id="api-section" className="py-64 px-6 bg-black relative overflow-hidden">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[1px] bg-gradient-to-r from-transparent via-white/10 to-transparent" />
         
-        <div className="max-w-4xl mx-auto text-center mb-32 relative">
+        <div className="max-w-4xl mx-auto text-center mb-24 relative">
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             className="w-16 h-16 rounded-2xl bg-white/5 flex items-center justify-center text-white mb-10 mx-auto shadow-2xl border border-white/10 backdrop-blur-xl"
           >
-            <Cpu className="w-8 h-8" />
+            <Globe className="w-8 h-8 text-sky-400" />
           </motion.div>
           <motion.h2 
             initial={{ opacity: 0, y: 20 }}
@@ -1485,105 +1494,21 @@ const LandingView = ({ onViewChange, onStartBuilding }: { onViewChange: (v: any)
             transition={{ delay: 0.1 }}
             className="text-6xl md:text-8xl font-heading italic tracking-tighter text-white mb-10"
           >
-            Smart Multi-Model <span className="opacity-30">Engine.</span>
+            Cinematic Edge <span className="opacity-30">Deployments.</span>
           </motion.h2>
           <motion.p 
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="text-white/40 text-xl md:text-2xl font-body font-light leading-relaxed max-w-2xl mx-auto"
+            className="text-white/40 text-xl md:text-2xl font-body font-light leading-relaxed max-w-2xl mx-auto font-sans"
           >
-            Lucid automatically routes complex requests across <span className="text-white/80">Anthropic</span>, <span className="text-white/80">Google</span>, and <span className="text-white/80">OpenAI</span> for optimal latency and synthesis.
+            Broadcast your vibe sandbox creations globally with a single click. Instantly routed, optimized to 24 locations, and secured natively.
           </motion.p>
         </div>
 
         <div className="max-w-6xl mx-auto relative group">
-           <div className="absolute inset-0 bg-blue-500/5 blur-[100px] rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
-           <VisualFlow />
-           
-           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-32 relative z-10">
-              {[
-                { 
-                  title: 'Speed Optimization', 
-                  desc: 'Instant response routing for micro-tasks and UI tweaks using Gemini Flash.',
-                  icon: Zap,
-                  color: 'text-blue-400'
-                },
-                { 
-                  title: 'Logic Synthesis', 
-                  desc: 'Deep reasoning and full-stack architecture handled by Claude 3.5 Sonnet.',
-                  icon: Code2,
-                  color: 'text-purple-400'
-                },
-                { 
-                  title: 'Vision Intelligence', 
-                  desc: 'Hardware-accelerated pixel extraction using GPT-4o Vision models.',
-                  icon: Eye,
-                  color: 'text-emerald-400'
-                }
-              ].map((item, i) => (
-                <motion.div 
-                  key={i}
-                  initial={{ opacity: 0, y: 30 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.1 }}
-                  className="glass-card p-12 rounded-[3.5rem] border-white/5 hover:border-white/10 transition-all group relative overflow-hidden"
-                >
-                   <div className={`w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center mb-8 ${item.color} group-hover:scale-110 transition-transform`}>
-                     <item.icon className="w-6 h-6" />
-                   </div>
-                   <h3 className="text-xl text-white font-medium mb-4 italic font-heading tracking-tight">{item.title}</h3>
-                   <p className="text-sm text-white/30 leading-relaxed font-light">{item.desc}</p>
-                   
-                   <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-white/5 to-transparent scale-x-0 group-hover:scale-100 transition-transform duration-500" />
-                </motion.div>
-              ))}
-           </div>
-        </div>
-      </section>
-
-      <SectionDivider />
-
-      {/* Section 6: PRICING SECTION */}
-      <section id="pricing-section" className="py-48 px-6 bg-black">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex flex-col md:flex-row items-end justify-between mb-20 gap-8">
-            <div className="text-left">
-               <h2 className="text-6xl font-medium tracking-tight text-white mb-6 italic font-heading">Simple, Scalable <span className="opacity-30">Pricing.</span></h2>
-               <p className="text-white/40 text-xl font-light max-w-xl italic">Architectural freedom for creators and teams alike.</p>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-32">
-            <PriceCard 
-              onViewChange={onViewChange}
-              title="Free"
-              price={0}
-              credits="10"
-              description="Good for exploring the power of Lucid."
-              features={["10 Monthly Credits", "AI UI Generation", "Prompt → UI Access", "Watermark exports", "Public projects"]}
-              cta="Get Started"
-            />
-            <PriceCard 
-              onViewChange={onViewChange}
-              popular
-              title="Pro"
-              price={20}
-              credits="500"
-              description="The standard for professional creators."
-              features={["500 Monthly Credits", "Full stack development", "Visual Editing Tool", "React & Tailwind Export", "Private projects", "Priority queue"]}
-              cta="Upgrade to Pro"
-            />
-            <PriceCard 
-              onViewChange={onViewChange}
-              title="Studio"
-              price={49}
-              credits="2000"
-              description="Power tools for agencies and teams."
-              features={["2000 Monthly Credits", "Full stack development", "Shared projects", "Advanced exports", "Premium AI models", "Animation gen"]}
-              cta="Go Studio"
-            />
-          </div>
+           <div className="absolute inset-0 bg-sky-500/5 blur-[100px] rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
+           <CinematicDeployments />
         </div>
       </section>
 
