@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   CreditCard, Check, ChevronDown, Sparkles, ShieldCheck, 
@@ -9,6 +9,7 @@ import { TopNav } from '../studio/layout/TopNav';
 import { StudioBackground } from '../studio/components/StudioBackground';
 import { CelestialHorizon } from '../studio/components/CelestialHorizon';
 import { useStudioStore } from '../studio/store/useStudioStore';
+import { ResponsiveContainer, AreaChart, Area, Tooltip as RechartsTooltip } from 'recharts';
 
 interface DropdownOption {
   credits: string;
@@ -130,6 +131,47 @@ export const StudioBillingPage: React.FC = () => {
     { date: 'June 11', spent: 14, task: 'Schema migration' },
   ];
 
+  // Dynamically generated 30 days daily credit consumption that responds & scales based on active user package capacity & credits
+  const sparklineData = useMemo(() => {
+    const scaleFactor = user.maxCredits / 428;
+    const baseSpline = [
+      { day: 'Day 1', spent: 12 },
+      { day: 'Day 2', spent: 15 },
+      { day: 'Day 3', spent: 8 },
+      { day: 'Day 4', spent: 22 },
+      { day: 'Day 5', spent: 34 },
+      { day: 'Day 6', spent: 40 },
+      { day: 'Day 7', spent: 11 },
+      { day: 'Day 8', spent: 18 },
+      { day: 'Day 9', spent: 25 },
+      { day: 'Day 10', spent: 30 },
+      { day: 'Day 11', spent: 55 },
+      { day: 'Day 12', spent: 42 },
+      { day: 'Day 13', spent: 15 },
+      { day: 'Day 14', spent: 20 },
+      { day: 'Day 15', spent: 65 },
+      { day: 'Day 16', spent: 85 },
+      { day: 'Day 17', spent: 45 },
+      { day: 'Day 18', spent: 30 },
+      { day: 'Day 19', spent: 28 },
+      { day: 'Day 20', spent: 14 },
+      { day: 'Day 21', spent: 35 },
+      { day: 'Day 22', spent: 38 },
+      { day: 'Day 23', spent: 42 },
+      { day: 'Day 24', spent: 60 },
+      { day: 'Day 25', spent: 78 },
+      { day: 'Day 26', spent: 50 },
+      { day: 'Day 27', spent: 32 },
+      { day: 'Day 28', spent: 18 },
+      { day: 'Day 29', spent: 22 },
+      { day: 'Day 30', spent: Math.round(26 + (user.credits / 10)) } // dynamic link to current remaining budget
+    ];
+    return baseSpline.map(item => ({
+      ...item,
+      spent: Math.round(item.spent * scaleFactor)
+    }));
+  }, [user.maxCredits, user.credits]);
+
   return (
     <div className="relative min-h-screen w-full bg-[#050505] text-white overflow-hidden selection:bg-white/10 selection:text-white font-body">
       {/* Cinematic Background Atmosphere */}
@@ -183,19 +225,68 @@ export const StudioBillingPage: React.FC = () => {
                 {/* Silver Glow Aura */}
                 <div className="absolute top-0 right-0 w-64 h-64 bg-white/[0.015] blur-3xl rounded-full pointer-events-none group-hover:bg-white/[0.03] transition-all duration-700" />
                 
-                <div className="flex flex-col gap-1.5 z-10 text-left">
-                  <span className="text-[10px] font-black tracking-[0.2em] text-white/50 uppercase font-sans">
-                    active computation credit line
-                  </span>
-                  <div className="flex items-baseline gap-1.5 mt-2">
-                    <h3 className="text-5xl font-heading italic text-white tracking-widest leading-none">
-                      {user.credits}
-                    </h3>
-                    <span className="text-xs text-zinc-500 font-bold uppercase tracking-wider ml-1">Credits Remaining</span>
+                <div className="grid grid-cols-1 md:grid-cols-5 gap-6 z-10 w-full text-left items-center">
+                  <div className="md:col-span-3 flex flex-col gap-1.5">
+                    <span className="text-[10px] font-black tracking-[0.2em] text-white/50 uppercase font-sans">
+                      active computation credit line
+                    </span>
+                    <div className="flex items-baseline gap-1.5 mt-2">
+                      <h3 className="text-5xl font-heading italic text-white tracking-widest leading-none">
+                        {user.credits}
+                      </h3>
+                      <span className="text-xs text-zinc-500 font-bold uppercase tracking-wider ml-1">Credits Remaining</span>
+                    </div>
+                    <p className="text-xs text-zinc-400 mt-2 font-body max-w-sm leading-relaxed">
+                      Credits are parsed in real-time as your workspace compiles JSX modules and interfaces with AI models. Your next package refill occurs on <span className="text-white font-bold underline">July 1, 2026</span>.
+                    </p>
                   </div>
-                  <p className="text-xs text-zinc-400 mt-2 font-body max-w-md">
-                    Credits are parsed in real-time as your workspace compiles JSX modules and interfaces with AI models. Your next package refill occurs on <span className="text-white font-bold underline">July 1, 2026</span>.
-                  </p>
+
+                  {/* Sparkline mini-graph Container */}
+                  <div className="md:col-span-2 flex flex-col justify-center items-stretch bg-[#0c0c0e]/60 border border-white/[0.03] rounded-2xl p-4 min-h-[110px] backdrop-blur-md relative select-none">
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span className="text-[9px] font-black tracking-wider text-white/40 uppercase font-sans">
+                        30-Day Burn Sparkline
+                      </span>
+                      <span className="text-[10px] font-mono text-zinc-400">
+                        Avg: ~{Math.round(sparklineData.reduce((acc, curr) => acc + curr.spent, 0) / 30)}/day
+                      </span>
+                    </div>
+                    <div className="h-[64px] w-full mt-1">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <AreaChart data={sparklineData} margin={{ top: 2, right: 2, left: 2, bottom: 2 }}>
+                          <defs>
+                            <linearGradient id="billingSparklineGrad" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="0%" stopColor="#ffffff" stopOpacity={0.25} />
+                              <stop offset="100%" stopColor="#ffffff" stopOpacity={0.0} />
+                            </linearGradient>
+                          </defs>
+                          <RechartsTooltip 
+                            content={({ active, payload }) => {
+                              if (active && payload && payload.length) {
+                                return (
+                                  <div className="bg-zinc-950 border border-white/10 px-2 py-1 rounded text-[9px] font-mono text-white/90 shadow-xl">
+                                    <span className="text-zinc-500">{payload[0].payload.day}: </span>
+                                    <span className="font-extrabold text-white">{payload[0].value} cr</span>
+                                  </div>
+                                );
+                              }
+                              return null;
+                            }}
+                            cursor={{ stroke: 'rgba(255, 255, 255, 0.1)', strokeWidth: 1 }}
+                          />
+                          <Area 
+                            type="monotone" 
+                            dataKey="spent" 
+                            stroke="#ffffff" 
+                            strokeWidth={1.5} 
+                            fill="url(#billingSparklineGrad)"
+                            dot={false}
+                            activeDot={{ r: 3, strokeWidth: 0, fill: '#ffffff' }}
+                          />
+                        </AreaChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </div>
                 </div>
 
                 {/* Simulated bar progress bar */}

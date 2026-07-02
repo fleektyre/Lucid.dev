@@ -43,6 +43,23 @@ export const AIPanel: React.FC = () => {
   // Prompt enhancer state
   const [isEnhancing, setIsEnhancing] = useState(false);
 
+  // Fading "Let's vibe" ideas state
+  const ideas = [
+    "a private user portal where guests can submit design briefs...",
+    "a SaaS landing page with dark glassmorphic components...",
+    "a clean interactive finance dashboard with real-time charts...",
+    "a professional portfolio for a digital artist with fluid transitions...",
+    "a high-performance task organizer using custom spring physics..."
+  ];
+  const [currentIdeaIndex, setCurrentIdeaIndex] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentIdeaIndex((prev) => (prev + 1) % ideas.length);
+    }, 4000);
+    return () => clearInterval(interval);
+  }, []);
+
   // Plus button custom dropdown states
   const [showPlusDropdown, setShowPlusDropdown] = useState(false);
   const [plusDropdownView, setPlusDropdownView] = useState<'main' | 'attach' | 'design' | 'connectors' | 'databases'>('main');
@@ -52,6 +69,7 @@ export const AIPanel: React.FC = () => {
   const [attachedFiles, setAttachedFiles] = useState<{ id: string, name: string, type: 'file' | 'screenshot' }[]>([]);
   const [showCaptureFlash, setShowCaptureFlash] = useState(false);
   const [successToast, setSuccessToast] = useState<string | null>(null);
+  const [isFocused, setIsFocused] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -270,10 +288,35 @@ export const AIPanel: React.FC = () => {
         )}
 
         {/* INPUT AND RECORDING DISPLAY */}
-        <div className="w-full relative">
+        <div className="w-full relative min-h-[72px]">
+          {/* Custom Animated Placeholder Overlay */}
+          {!inputValue && !isRecording && (
+            <div 
+              className={`absolute top-0 left-0 right-0 bottom-0 pointer-events-none select-none text-[15px] font-sans leading-relaxed pt-1 flex flex-wrap gap-x-1.5 z-0 transition-opacity duration-300
+                ${isFocused ? 'opacity-35' : 'opacity-100'}
+              `}
+            >
+              <span className="text-zinc-400 font-sans font-medium">Let's vibe</span>
+              <AnimatePresence mode="wait">
+                <motion.span
+                  key={currentIdeaIndex}
+                  initial={{ opacity: 0, y: 3 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -3 }}
+                  transition={{ duration: 0.3, ease: "easeInOut" }}
+                  className="text-zinc-500 font-sans font-normal"
+                >
+                  {ideas[currentIdeaIndex]}
+                </motion.span>
+              </AnimatePresence>
+            </div>
+          )}
+
           <textarea
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value.slice(0, 4000))}
+            onFocus={() => setIsFocused(true)}
+            onBlur={() => setIsFocused(false)}
             onKeyDown={(e) => {
               if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
@@ -281,10 +324,8 @@ export const AIPanel: React.FC = () => {
               }
             }}
             disabled={isRecording}
-            placeholder={isRecording ? "Listening to your spoken guidelines... Tap microphone to stop." : "Let's vibe a private user portal where guests can..."}
-            className={`w-full bg-transparent border-none text-white focus:outline-none resize-none min-h-[72px] text-15 font-sans leading-relaxed transition-all duration-300
-              ${isRecording ? 'placeholder:text-emerald-400 italic' : 'placeholder:text-zinc-500/95'}
-            `}
+            placeholder={isRecording ? "Listening to your spoken guidelines... Tap microphone to stop." : ""}
+            className="w-full bg-transparent border-none text-white focus:outline-none resize-none min-h-[72px] text-[15px] font-sans leading-relaxed transition-all duration-300 relative z-10 pt-1"
           />
 
           {/* Real-time Voice Recording waveform simulation */}
@@ -310,7 +351,7 @@ export const AIPanel: React.FC = () => {
         </div>
 
         {/* BOTTOM ROW ACTION BAR */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between pt-1 gap-4 select-none">
+        <div className="flex flex-col md:flex-row md:items-center justify-between pt-1 gap-4 select-none border-t border-white/[0.03]">
           
           {/* LEFT: Custom Interactive dropdown with simulated Attach and features */}
           <div className="flex items-center gap-2 relative" ref={dropdownRef}>
@@ -567,24 +608,166 @@ export const AIPanel: React.FC = () => {
         </div>
       </motion.div>
 
-      {/* FOOTER ANCHORS - or start from */}
-      <div className="flex flex-wrap items-center justify-center gap-2.5 mt-2 select-none">
-        <span className="text-[11px] font-sans text-zinc-500">or start from</span>
-
-        <button className="flex items-center gap-1.5 bg-zinc-900/40 hover:bg-zinc-900/90 border border-zinc-800 px-3 py-1.5 rounded-full text-xs text-zinc-400 hover:text-white hover:border-zinc-700 transition-all cursor-pointer">
-          <PenTool className="w-3.5 h-3.5 text-purple-400" />
-          <span>Figma</span>
+      {/* Try One Suggestion Pills */}
+      <div className="flex flex-wrap items-center justify-center gap-2.5 mt-5 text-xs text-white/70 select-none">
+        <span className="font-medium text-zinc-400">Try one</span>
+        <span className="text-white/20">→</span>
+        <button 
+          onClick={() => setInputValue("Build a modern SaaS landing page with fluid glass layouts...")}
+          className="bg-white/5 hover:bg-white/10 border border-white/5 px-4 py-2 rounded-full transition-all cursor-pointer font-sans text-white/90 font-medium"
+        >
+          Landing page
         </button>
-
-        <button className="flex items-center gap-1.5 bg-zinc-900/40 hover:bg-zinc-900/90 border border-zinc-800 px-3 py-1.5 rounded-full text-xs text-zinc-400 hover:text-white hover:border-zinc-700 transition-all cursor-pointer">
-          <Github className="w-3.5 h-3.5 text-zinc-300" />
-          <span>GitHub</span>
+        <button 
+          onClick={() => setInputValue("Create a dark aesthetic personal website with portfolio gallery...")}
+          className="bg-white/5 hover:bg-white/10 border border-white/5 px-4 py-2 rounded-full transition-all cursor-pointer font-sans text-white/90 font-medium"
+        >
+          Personal website
         </button>
-
-        <button className="flex items-center gap-1.5 bg-zinc-900/40 hover:bg-zinc-900/90 border border-zinc-800 px-3 py-1.5 rounded-full text-xs text-zinc-400 hover:text-white hover:border-zinc-700 transition-all cursor-pointer">
-          <Bookmark className="w-3.5 h-3.5 text-indigo-400" />
-          <span>Team template</span>
+        <button 
+          onClick={() => setInputValue("Architect a multi-tenant SaaS App with relational database logs...")}
+          className="bg-white/5 hover:bg-white/10 border border-white/5 px-4 py-2 rounded-full transition-all cursor-pointer font-sans text-white/90 font-medium"
+        >
+          SaaS App
         </button>
+      </div>
+
+      {/* My Apps Section */}
+      <div className="w-full mt-10 select-none">
+        <div className="flex items-center justify-between mb-5">
+          <h2 className="text-lg font-bold text-white tracking-tight font-sans">My apps</h2>
+          <button 
+            onClick={() => addNotification('info', 'All Apps Directory', 'Opening your comprehensive applications archive...')}
+            className="text-zinc-400 hover:text-white text-xs font-semibold flex items-center gap-1 transition-colors cursor-pointer"
+          >
+            <span>See all</span>
+            <span className="text-[10px] opacity-60">❯</span>
+          </button>
+        </div>
+
+        {/* Grid of Apps */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 w-full">
+          
+          {/* Card 1: Black & White Launch */}
+          <div className="bg-[#121214]/40 border border-white/[0.06] hover:border-white/12 rounded-[1.25rem] p-3.5 flex flex-col gap-3.5 transition-all duration-300 hover:translate-y-[-2px] group relative overflow-hidden backdrop-blur-sm shadow-[0_4px_20px_rgba(0,0,0,0.3)] hover:shadow-[0_12px_30px_rgba(0,0,0,0.5)]">
+            
+            {/* Custom high-fidelity CSS illustration mockup */}
+            <div className="aspect-[16/10] bg-[#fafafc] rounded-xl border border-black/5 overflow-hidden flex flex-col justify-between p-3 relative select-none">
+              {/* Header bar of mock site */}
+              <div className="flex items-center justify-between">
+                <span className="text-[7px] font-black text-black tracking-tighter">Apex</span>
+                <div className="flex items-center gap-1.5 text-[5px] text-zinc-500 font-semibold scale-90">
+                  <span>Product</span>
+                  <span>Features</span>
+                  <span>Pricing</span>
+                  <span>About</span>
+                </div>
+                <div className="flex items-center gap-1 scale-85">
+                  <span className="text-[4px] text-zinc-700 font-bold px-1 py-0.5 rounded bg-zinc-100">Sign in</span>
+                  <span className="text-[4px] text-white font-bold px-1.5 py-0.5 rounded bg-black">Get started</span>
+                </div>
+              </div>
+
+              {/* Hero section inside mock site */}
+              <div className="text-center my-auto flex flex-col items-center gap-1">
+                <span className="text-[4px] font-bold text-zinc-400 bg-zinc-100 px-1 py-0.5 rounded uppercase tracking-wider">NOW IN PUBLIC BETA</span>
+                <h3 className="text-xs font-black text-black leading-none tracking-tight mt-1 max-w-[110px]">
+                  Build faster. Ship smarter.
+                </h3>
+                <p className="text-[4.5px] text-zinc-500 leading-normal max-w-[120px] mt-1 scale-90">
+                  The platform that eliminates friction between your idea and your users. Simply by design, powerful at scale.
+                </p>
+                <div className="flex gap-1.5 mt-1 scale-85">
+                  <span className="bg-black text-white text-[4px] px-2 py-1 rounded font-bold cursor-pointer hover:bg-zinc-800 transition-colors">Start for free</span>
+                  <span className="border border-zinc-200 text-zinc-700 text-[4px] px-2 py-1 rounded font-bold cursor-pointer hover:bg-zinc-50 transition-colors">View the docs</span>
+                </div>
+              </div>
+
+              {/* Visual Geometric Grid of half-filled triangles */}
+              <div className="grid grid-cols-7 gap-1 w-full border-t border-zinc-150 pt-1.5 px-2">
+                {Array.from({ length: 14 }).map((_, idx) => (
+                  <div key={idx} className="aspect-square relative overflow-hidden bg-zinc-50 border border-zinc-100/60 rounded">
+                    {idx % 3 === 0 && <div className="absolute inset-0 bg-black" style={{ clipPath: 'polygon(0 0, 100% 0, 0 100%)' }} />}
+                    {idx % 3 === 1 && <div className="absolute inset-0 bg-zinc-300" style={{ clipPath: 'polygon(100% 0, 100% 100%, 0 100%)' }} />}
+                    {idx % 3 === 2 && <div className="absolute inset-0 bg-black" style={{ clipPath: 'polygon(0 0, 100% 100%, 0 100%)' }} />}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Card Info */}
+            <div className="flex flex-col text-left px-0.5">
+              <span className="text-xs font-bold text-white group-hover:text-sky-400 transition-colors">Black & White Launch</span>
+              <span className="text-[10px] text-zinc-500 font-medium mt-1">Edited 24 minutes ago</span>
+            </div>
+          </div>
+
+          {/* Card 2: SaaS Analytics Hub */}
+          <div className="bg-[#121214]/40 border border-white/[0.06] hover:border-white/12 rounded-[1.25rem] p-3.5 flex flex-col gap-3.5 transition-all duration-300 hover:translate-y-[-2px] group relative overflow-hidden backdrop-blur-sm shadow-[0_4px_20px_rgba(0,0,0,0.3)] hover:shadow-[0_12px_30px_rgba(0,0,0,0.5)]">
+            
+            <div className="aspect-[16/10] bg-[#0c0c0e] rounded-xl border border-white/5 overflow-hidden flex flex-col justify-between p-3 relative select-none">
+              <div className="flex items-center justify-between border-b border-white/[0.04] pb-1">
+                <span className="text-[7px] font-bold text-white/95">Nucleus</span>
+                <span className="text-[5px] text-zinc-400">v1.2.4</span>
+              </div>
+              
+              <div className="grid grid-cols-3 gap-1.5 my-auto">
+                <div className="bg-white/[0.02] border border-white/[0.04] rounded p-1 flex flex-col gap-0.5">
+                  <span className="text-[4px] text-zinc-500">MAU</span>
+                  <span className="text-[8px] font-bold text-emerald-400">+14.2%</span>
+                </div>
+                <div className="bg-white/[0.02] border border-white/[0.04] rounded p-1 flex flex-col gap-0.5">
+                  <span className="text-[4px] text-zinc-500">ARR</span>
+                  <span className="text-[8px] font-bold text-sky-400">$84.2k</span>
+                </div>
+                <div className="bg-white/[0.02] border border-white/[0.04] rounded p-1 flex flex-col gap-0.5">
+                  <span className="text-[4px] text-zinc-500">VIBE</span>
+                  <span className="text-[8px] font-bold text-purple-400">99.8%</span>
+                </div>
+              </div>
+
+              <div className="flex items-end justify-between gap-1 w-full px-1 border-t border-white/[0.04] pt-1.5">
+                {[30, 60, 45, 90, 75, 50, 85, 95, 40, 70].map((h, i) => (
+                  <div key={i} className="bg-white/10 rounded-t w-full" style={{ height: `${h * 0.15}px` }}>
+                    {i === 7 && <div className="bg-sky-400 w-full h-full rounded-t" />}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex flex-col text-left px-0.5">
+              <span className="text-xs font-bold text-white group-hover:text-sky-400 transition-colors">SaaS Analytics Hub</span>
+              <span className="text-[10px] text-zinc-500 font-medium mt-1">Edited 2 hours ago</span>
+            </div>
+          </div>
+
+          {/* Card 3: Celestial Vibe Portal */}
+          <div className="bg-[#121214]/40 border border-white/[0.06] hover:border-white/12 rounded-[1.25rem] p-3.5 flex flex-col gap-3.5 transition-all duration-300 hover:translate-y-[-2px] group relative overflow-hidden backdrop-blur-sm shadow-[0_4px_20px_rgba(0,0,0,0.3)] hover:shadow-[0_12px_30px_rgba(0,0,0,0.5)]">
+            
+            <div className="aspect-[16/10] bg-gradient-to-br from-[#0c051a] to-[#04020a] rounded-xl border border-white/5 overflow-hidden flex flex-col justify-between p-3 relative select-none">
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(168,85,247,0.15)_0,transparent_70%)]" />
+              
+              <div className="flex items-center justify-between relative z-10">
+                <span className="text-[7px] font-serif italic text-purple-200">Cosmic</span>
+                <span className="text-[4px] text-zinc-400 bg-white/5 px-1 py-0.5 rounded">ONLINE</span>
+              </div>
+
+              <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-purple-600 to-indigo-500 border border-purple-400/30 m-auto relative z-10 flex items-center justify-center shadow-[0_0_20px_rgba(168,85,247,0.4)]">
+                <div className="w-7 h-7 rounded-full bg-black/40 backdrop-blur-xs flex items-center justify-center">
+                  <span className="text-[6px] text-purple-200 font-bold">VIBE</span>
+                </div>
+              </div>
+
+              <span className="text-[5px] text-zinc-500 text-center relative z-10">Orbit: Active Sync Pipeline</span>
+            </div>
+
+            <div className="flex flex-col text-left px-0.5">
+              <span className="text-xs font-bold text-white group-hover:text-sky-400 transition-colors">Celestial Vibe Portal</span>
+              <span className="text-[10px] text-zinc-500 font-medium mt-1">Edited yesterday</span>
+            </div>
+          </div>
+
+        </div>
       </div>
 
     </div>

@@ -8,9 +8,17 @@ import { AIPanel } from '../panels/AIPanel';
 import { SettingsView } from './SettingsView';
 import { useStudioStore } from '../store/useStudioStore';
 import { PricingModal } from '../components/PricingModal';
+import { OnboardingModal } from '../components/OnboardingModal';
 
 const StudioWorkspace: React.FC = () => {
-  const { isSidebarExpanded, showPricingModal, setShowPricingModal, currentView } = useStudioStore();
+  const { 
+    isSidebarExpanded, 
+    showPricingModal, 
+    setShowPricingModal, 
+    showOnboardingModal, 
+    setShowOnboardingModal, 
+    currentView 
+  } = useStudioStore();
 
   const [isMd, setIsMd] = useState(typeof window !== 'undefined' ? window.innerWidth >= 768 : true);
 
@@ -22,10 +30,23 @@ const StudioWorkspace: React.FC = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  // Safely trigger the onboarding modal on the client side after initial mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const seen = localStorage.getItem('lucid_onboarding_seen_v2');
+      if (seen !== 'true') {
+        setShowOnboardingModal(true);
+      }
+    }
+  }, [setShowOnboardingModal]);
+
   return (
-    <div className="relative min-h-screen w-full bg-[#050505] text-white overflow-hidden selection:bg-emerald-500/20 selection:text-white font-sans font-normal">
+    <div className="relative min-h-screen w-full bg-gradient-to-b from-[#060813] via-[#040406] to-[#020204] text-white overflow-hidden selection:bg-emerald-500/20 selection:text-white font-sans font-normal">
       {/* Cinematic Studio Background - Atmosphere MP4 */}
       <StudioBackground src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260418_094631_d30ab262-45ee-4b7d-99f3-5d5848c8ef13.mp4" />
+
+      {/* Top cosmic ambient light to blend any dark sections seamlessly */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[120%] h-[350px] rounded-full bg-[radial-gradient(circle_at_center,rgba(14,165,233,0.08)_0%,transparent_70%)] blur-[80px] pointer-events-none z-0" />
 
       {/* Blue planet-edge curved lighting arc */}
       <CelestialHorizon />
@@ -40,7 +61,7 @@ const StudioWorkspace: React.FC = () => {
       
       {/* Decorative Overlays */}
       <div className="fixed inset-0 pointer-events-none z-0">
-        <div className="absolute top-0 left-0 right-0 h-40 bg-gradient-to-b from-black/80 to-transparent" />
+        <div className="absolute top-0 left-0 right-0 h-40 bg-gradient-to-b from-black/15 to-transparent" />
         <div className="absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-black/85 to-transparent" />
       </div>
 
@@ -85,6 +106,9 @@ const StudioWorkspace: React.FC = () => {
 
       {/* Modern interactive Pricing Overlay */}
       <PricingModal isOpen={showPricingModal} onClose={() => setShowPricingModal(false)} />
+
+      {/* Modern interactive Onboarding Flow Overlay */}
+      <OnboardingModal isOpen={showOnboardingModal} onClose={() => setShowOnboardingModal(false)} />
     </div>
   );
 };

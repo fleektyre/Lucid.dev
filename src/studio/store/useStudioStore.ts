@@ -7,6 +7,7 @@ interface StudioState {
   aiState: AIState;
   isSidebarExpanded: boolean;
   showPricingModal: boolean;
+  showOnboardingModal: boolean;
   currentView: 'chat' | 'settings';
   activeSettingsTab: string;
   notifications: AppNotification[];
@@ -16,6 +17,7 @@ interface StudioState {
   setAIState: (state: Partial<AIState>) => void;
   toggleSidebar: () => void;
   setShowPricingModal: (open: boolean) => void;
+  setShowOnboardingModal: (open: boolean) => void;
   setCurrentView: (view: 'chat' | 'settings') => void;
   setActiveSettingsTab: (tab: string) => void;
   
@@ -54,6 +56,7 @@ export const useStudioStore = create<StudioState>((set) => ({
   },
   isSidebarExpanded: true,
   showPricingModal: false,
+  showOnboardingModal: false,
   currentView: 'chat',
   activeSettingsTab: 'general',
   
@@ -90,6 +93,12 @@ export const useStudioStore = create<StudioState>((set) => ({
   setAIState: (state) => set((prev) => ({ aiState: { ...prev.aiState, ...state } })),
   toggleSidebar: () => set((state) => ({ isSidebarExpanded: !state.isSidebarExpanded })),
   setShowPricingModal: (open) => set({ showPricingModal: open }),
+  setShowOnboardingModal: (open) => {
+    if (!open && typeof window !== 'undefined') {
+      localStorage.setItem('lucid_onboarding_seen_v2', 'true');
+    }
+    set({ showOnboardingModal: open });
+  },
   setCurrentView: (currentView) => set({ currentView }),
   setActiveSettingsTab: (activeSettingsTab) => set({ activeSettingsTab }),
   

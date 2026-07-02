@@ -187,8 +187,8 @@ export const StudioBackground: React.FC<StudioBackgroundProps> = ({ src }) => {
         style={{ opacity: 0 }}
       />
       {/* Dark overlay for readability */}
-      <div className="absolute inset-0 bg-black/25 backdrop-blur-[1px]" />
-      <div className="absolute inset-0 bg-gradient-to-b from-black/45 via-transparent to-black/75" />
+      <div className="absolute inset-0 bg-black/20 backdrop-blur-[1px]" />
+      <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/75" />
     </div>
   );
 };
