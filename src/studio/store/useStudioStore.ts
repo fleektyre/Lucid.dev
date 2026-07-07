@@ -8,9 +8,12 @@ interface StudioState {
   isSidebarExpanded: boolean;
   showPricingModal: boolean;
   showOnboardingModal: boolean;
-  currentView: 'chat' | 'settings';
+  showSettingsModal: boolean;
+  currentView: 'chat' | 'settings' | 'all_apps' | 'vibe';
   activeSettingsTab: string;
   notifications: AppNotification[];
+  glowFeatureEnabled: boolean;
+  finishSoundEnabled: boolean;
   
   setUser: (user: User) => void;
   setProject: (project: Project) => void;
@@ -18,8 +21,11 @@ interface StudioState {
   toggleSidebar: () => void;
   setShowPricingModal: (open: boolean) => void;
   setShowOnboardingModal: (open: boolean) => void;
-  setCurrentView: (view: 'chat' | 'settings') => void;
+  setShowSettingsModal: (open: boolean) => void;
+  setCurrentView: (view: 'chat' | 'settings' | 'all_apps' | 'vibe') => void;
   setActiveSettingsTab: (tab: string) => void;
+  setGlowFeatureEnabled: (enabled: boolean) => void;
+  setFinishSoundEnabled: (enabled: boolean) => void;
   
   // Notification actions
   addNotification: (type: 'ai' | 'billing' | 'error' | 'info', title: string, message: string) => void;
@@ -57,36 +63,13 @@ export const useStudioStore = create<StudioState>((set) => ({
   isSidebarExpanded: true,
   showPricingModal: false,
   showOnboardingModal: false,
+  showSettingsModal: false,
   currentView: 'chat',
   activeSettingsTab: 'general',
+  glowFeatureEnabled: false,
+  finishSoundEnabled: true,
   
-  // Seed initial notifications representing user requirements: AI completion, billing, errors
-  notifications: [
-    {
-      id: 'nt-1',
-      type: 'ai',
-      title: 'AI Generation Completed',
-      message: 'The custom glass pill compilation pipeline for lucid.dev completed successfully in 842ms.',
-      read: false,
-      timestamp: '5 mins ago'
-    },
-    {
-      id: 'nt-2',
-      type: 'billing',
-      title: 'Billing Refill Initiated',
-      message: 'Paystack Sandbox transfer confirmed: +500 compute credits allocated to your workspace.',
-      read: false,
-      timestamp: '1 hour ago'
-    },
-    {
-      id: 'nt-3',
-      type: 'error',
-      title: 'Sync Pipeline Interrupted',
-      message: 'Error: Connection timed out while trying to establish live workspace sockets.',
-      read: true,
-      timestamp: '1 day ago'
-    }
-  ],
+  notifications: [],
 
   setUser: (user) => set({ user }),
   setProject: (currentProject) => set({ currentProject }),
@@ -99,20 +82,13 @@ export const useStudioStore = create<StudioState>((set) => ({
     }
     set({ showOnboardingModal: open });
   },
+  setShowSettingsModal: (open) => set({ showSettingsModal: open }),
   setCurrentView: (currentView) => set({ currentView }),
   setActiveSettingsTab: (activeSettingsTab) => set({ activeSettingsTab }),
+  setGlowFeatureEnabled: (glowFeatureEnabled) => set({ glowFeatureEnabled }),
+  setFinishSoundEnabled: (finishSoundEnabled) => set({ finishSoundEnabled }),
   
-  addNotification: (type, title, message) => set((state) => {
-    const newNotif: AppNotification = {
-      id: `nt-${Date.now()}`,
-      type,
-      title,
-      message,
-      read: false,
-      timestamp: 'Just now'
-    };
-    return { notifications: [newNotif, ...state.notifications] };
-  }),
+  addNotification: (type, title, message) => {},
   
   markNotificationAsRead: (id) => set((state) => ({
     notifications: state.notifications.map((n) => n.id === id ? { ...n, read: true } : n)

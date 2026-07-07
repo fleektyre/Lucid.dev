@@ -173,11 +173,7 @@ export const StudioBillingPage: React.FC = () => {
   }, [user.maxCredits, user.credits]);
 
   return (
-    <div className="relative min-h-screen w-full bg-[#050505] text-white overflow-hidden selection:bg-white/10 selection:text-white font-body">
-      {/* Cinematic Background Atmosphere */}
-      <StudioBackground src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260418_094631_d30ab262-45ee-4b7d-99f3-5d5848c8ef13.mp4" />
-      <CelestialHorizon />
-
+    <div className="relative min-h-screen w-full bg-gradient-to-b from-[#060813] via-[#040406] to-[#020204] text-white overflow-hidden selection:bg-white/10 selection:text-white font-body">
       {/* Main Structural Layout */}
       <Sidebar />
       <TopNav />

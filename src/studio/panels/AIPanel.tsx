@@ -28,7 +28,7 @@ import {
 import { useStudioStore } from '../store/useStudioStore';
 
 export const AIPanel: React.FC = () => {
-  const { addNotification } = useStudioStore();
+  const { addNotification, glowFeatureEnabled, finishSoundEnabled, setCurrentView } = useStudioStore();
   const [inputValue, setInputValue] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [planMode, setPlanMode] = useState(false);
@@ -150,6 +150,10 @@ export const AIPanel: React.FC = () => {
     }, 1300);
   };
 
+  const playFinishChime = () => {
+    // Sound disabled by user request
+  };
+
   const handleSend = () => {
     const textToSend = inputValue.trim();
     if (!textToSend && attachedFiles.length === 0) {
@@ -158,13 +162,15 @@ export const AIPanel: React.FC = () => {
     }
 
     setIsGenerating(true);
-    showToast("Starting modular workspace compiler pipeline...");
 
     setTimeout(() => {
       setIsGenerating(false);
       setInputValue("");
       setAttachedFiles([]);
-      showToast("Vibe workspace compilation complete! Running dev server on port 3500.");
+      
+      if (finishSoundEnabled) {
+        playFinishChime();
+      }
       
       // Dispatch real user event notification
       addNotification(
@@ -172,6 +178,9 @@ export const AIPanel: React.FC = () => {
         'AI Generation Finished', 
         `Successfully synthesized high fidelity CSS glass modules for: "${textToSend || 'Workspace layout structure'}"`
       );
+
+      // Transition to the interactive Vibe Coding IDE workspace
+      setCurrentView('vibe');
     }, 2400);
   };
 
@@ -256,11 +265,23 @@ export const AIPanel: React.FC = () => {
       </div>
 
       {/* CHATBOX PANEL CONTAINER */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="w-full bg-[#18181b]/75 backdrop-blur-xl border border-zinc-800/80 rounded-[24px] p-4.5 shadow-[0_0_50px_rgba(14,165,233,0.12),0_30px_60px_rgba(0,0,0,0.65)] hover:border-sky-500/20 hover:shadow-[0_0_60px_rgba(14,165,233,0.20),0_20px_50px_rgba(0,0,0,0.7)] transition-all duration-500 relative flex flex-col gap-3"
-      >
+      <div className="relative w-full">
+        {glowFeatureEnabled && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="absolute -inset-1.5 rounded-[26px] bg-gradient-to-r from-pink-500 via-purple-500 to-cyan-500 blur-2xl opacity-45 pointer-events-none z-0 animate-pulse"
+          />
+        )}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className={`w-full backdrop-blur-xl rounded-[24px] p-4.5 transition-all duration-500 relative flex flex-col gap-3 z-10 ${
+            glowFeatureEnabled 
+              ? "bg-[#18181b]/95 border border-transparent bg-gradient-to-r from-pink-500/10 via-purple-500/10 to-cyan-500/10 shadow-[0_0_40px_rgba(236,72,153,0.25),0_30px_60px_rgba(0,0,0,0.8)]"
+              : "bg-[#18181b]/75 border border-zinc-800/80 shadow-[0_0_50px_rgba(14,165,233,0.12),0_30px_60px_rgba(0,0,0,0.65)] hover:border-sky-500/20 hover:shadow-[0_0_60px_rgba(14,165,233,0.20),0_20px_50px_rgba(0,0,0,0.7)]"
+          }`}
+        >
         
         {/* Attachment preview row (Prepares pills above input as expected in premium engines) */}
         {attachedFiles.length > 0 && (
@@ -585,21 +606,21 @@ export const AIPanel: React.FC = () => {
               <span>Plan</span>
             </button>
 
-            {/* Vibe Button (Premium Sky Blue like reference) */}
+            {/* Vibe Button (Vibrant blue-purple gradient with glow matching the screenshot) */}
             <button
               onClick={handleSend}
               disabled={isGenerating}
-              className="bg-sky-500 hover:bg-sky-400 disabled:bg-sky-650 text-black font-extrabold text-[12px] px-5 py-2 rounded-full flex items-center gap-1.5 shadow-lg shadow-sky-500/10 cursor-pointer hover:scale-102 active:scale-98 transition-all duration-200"
+              className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-500 hover:via-indigo-500 hover:to-purple-500 disabled:from-blue-800 disabled:to-purple-800 text-white font-extrabold text-[12px] px-6 py-2.5 rounded-full flex items-center gap-1.5 shadow-[0_0_20px_rgba(99,102,241,0.55)] hover:shadow-[0_0_30px_rgba(99,102,241,0.85)] cursor-pointer hover:scale-[1.03] active:scale-[0.97] transition-all duration-200 border border-white/10"
             >
               {isGenerating ? (
                 <>
-                  <Loader2 className="w-3.5 h-3.5 animate-spin text-black" />
+                  <Loader2 className="w-3.5 h-3.5 animate-spin text-white" />
                   <span>Compiling...</span>
                 </>
               ) : (
                 <>
                   <span>Vibe now</span>
-                  <ArrowRight className="w-3.5 h-3.5 font-black" strokeWidth={3} />
+                  <ArrowRight className="w-3.5 h-3.5 font-black text-white" strokeWidth={3} />
                 </>
               )}
             </button>
@@ -607,6 +628,7 @@ export const AIPanel: React.FC = () => {
 
         </div>
       </motion.div>
+      </div>
 
       {/* Try One Suggestion Pills */}
       <div className="flex flex-wrap items-center justify-center gap-2.5 mt-5 text-xs text-white/70 select-none">

@@ -5,7 +5,9 @@ import { CelestialHorizon } from '../components/CelestialHorizon';
 import { Sidebar } from '../layout/Sidebar';
 import { TopNav } from '../layout/TopNav';
 import { AIPanel } from '../panels/AIPanel';
-import { SettingsView } from './SettingsView';
+import { AllAppsView } from '../components/AllAppsView';
+import { VibeIDEView } from '../components/VibeIDEView';
+import { SettingsModal } from '../components/SettingsModal';
 import { useStudioStore } from '../store/useStudioStore';
 import { PricingModal } from '../components/PricingModal';
 import { OnboardingModal } from '../components/OnboardingModal';
@@ -17,6 +19,8 @@ const StudioWorkspace: React.FC = () => {
     setShowPricingModal, 
     showOnboardingModal, 
     setShowOnboardingModal, 
+    showSettingsModal,
+    setShowSettingsModal,
     currentView 
   } = useStudioStore();
 
@@ -40,24 +44,19 @@ const StudioWorkspace: React.FC = () => {
     }
   }, [setShowOnboardingModal]);
 
+  // Direct fullscreen override for the interactive Vibe IDE workspace
+  if (currentView === 'vibe') {
+    return <VibeIDEView />;
+  }
+
   return (
     <div className="relative min-h-screen w-full bg-gradient-to-b from-[#060813] via-[#040406] to-[#020204] text-white overflow-hidden selection:bg-emerald-500/20 selection:text-white font-sans font-normal">
-      {/* Cinematic Studio Background - Atmosphere MP4 */}
-      <StudioBackground src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260418_094631_d30ab262-45ee-4b7d-99f3-5d5848c8ef13.mp4" />
-
       {/* Top cosmic ambient light to blend any dark sections seamlessly */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[120%] h-[350px] rounded-full bg-[radial-gradient(circle_at_center,rgba(14,165,233,0.08)_0%,transparent_70%)] blur-[80px] pointer-events-none z-0" />
 
-      {/* Blue planet-edge curved lighting arc */}
-      <CelestialHorizon />
-
       {/* Floating Layout Layer */}
-      {currentView !== 'settings' && (
-        <>
-          <Sidebar />
-          <TopNav />
-        </>
-      )}
+      <Sidebar />
+      <TopNav />
       
       {/* Decorative Overlays */}
       <div className="fixed inset-0 pointer-events-none z-0">
@@ -68,26 +67,18 @@ const StudioWorkspace: React.FC = () => {
       {/* Main Content Workspace with smooth dynamic sidebar padding shift */}
       <motion.main 
         animate={{ 
-          paddingLeft: currentView === 'settings' ? 0 : (isSidebarExpanded && isMd ? 260 : 0)
+          paddingLeft: isSidebarExpanded && isMd ? 260 : 0
         }}
         transition={{ type: 'spring', damping: 28, stiffness: 220 }}
-        className={`relative z-10 pr-0 pb-16 min-h-screen flex flex-col items-center justify-start ${
-          currentView === 'settings' ? 'pt-8 w-full' : 'pt-32'
-        }`}
+        className="relative z-10 pr-0 pb-16 min-h-screen flex flex-col items-center justify-start pt-32"
       >
         
         {/* BACKGROUND WORKSPACE GRID AND FRAMING CONTAINER */}
-        <div className={`relative w-full mx-auto py-10 px-4 transition-all duration-300 ${
-          currentView === 'settings' ? 'max-w-[1500px]' : 'max-w-[1000px] flex flex-col items-center'
-        }`}>
+        <div className="relative w-full mx-auto py-10 px-4 transition-all duration-300 max-w-[1000px] flex flex-col items-center">
           
-          {/* Centralized AI chat primary interface or high-fidelity settings tab */}
+          {/* Centralized AI chat primary interface */}
           <div className="relative z-10 w-full flex flex-col items-center">
-            {currentView === 'settings' ? (
-              <SettingsView />
-            ) : (
-              <AIPanel />
-            )}
+            {currentView === 'all_apps' ? <AllAppsView /> : <AIPanel />}
           </div>
         </div>
       </motion.main>
@@ -103,6 +94,9 @@ const StudioWorkspace: React.FC = () => {
           <rect width="100%" height="100%" filter="url(#noise)" />
         </svg>
       </div>
+
+      {/* Modern interactive Settings Overlay */}
+      <SettingsModal isOpen={showSettingsModal} onClose={() => setShowSettingsModal(false)} />
 
       {/* Modern interactive Pricing Overlay */}
       <PricingModal isOpen={showPricingModal} onClose={() => setShowPricingModal(false)} />

@@ -25,7 +25,8 @@ export const Sidebar: React.FC = () => {
     currentView,
     setCurrentView,
     setActiveSettingsTab,
-    addNotification
+    showSettingsModal,
+    setShowSettingsModal
   } = useStudioStore();
 
   const [activeItem, setActiveItem] = useState<'home' | 'all_apps' | 'integrations'>('home');
@@ -33,51 +34,36 @@ export const Sidebar: React.FC = () => {
   const [showAppDropdown, setShowAppDropdown] = useState(false);
   const [selectedApp, setSelectedApp] = useState<string | null>(null);
   const [showFavorites, setShowFavorites] = useState(true);
-  const [feedbackNotification, setFeedbackNotification] = useState<string | null>(null);
 
-  // Custom action triggers for inline feedback
+  // Sync active item when currentView shifts globally
+  React.useEffect(() => {
+    if (currentView === 'chat') {
+      setActiveItem('home');
+    } else if (currentView === 'all_apps') {
+      setActiveItem('all_apps');
+    }
+  }, [currentView]);
+
+  // Custom action triggers
   const handleCreateNewApp = () => {
-    addNotification(
-      'info',
-      'App Synthesis Started',
-      'Initializing a fresh sandboxed application blueprint in your workspace environment.'
-    );
-    showToastFeedback('Creating new app layout...');
+    setCurrentView('chat');
   };
 
   const handleSelectAppClick = () => {
-    showToastFeedback('Loading workspace apps roster...');
+    // No-op or custom select
   };
 
   const handleInviteClick = () => {
-    addNotification(
-      'info',
-      'Invite Link Copied',
-      'An invitation link has been copied to your clipboard. Send it to your team members.'
-    );
-    showToastFeedback('Invite link copied!');
     setShowProfileDropdown(false);
   };
 
   const handleSupportClick = () => {
-    addNotification(
-      'info',
-      'Support Center',
-      'Connecting to the Lucid support center. A staff member will assist you shortly.'
-    );
-    showToastFeedback('Opening support panel...');
+    // No-op or support page
   };
 
   const handleSettingsClick = () => {
-    setCurrentView('settings');
+    setShowSettingsModal(true);
     setActiveSettingsTab('general');
-  };
-
-  const showToastFeedback = (message: string) => {
-    setFeedbackNotification(message);
-    setTimeout(() => {
-      setFeedbackNotification(null);
-    }, 3000);
   };
 
   return (
@@ -99,7 +85,7 @@ export const Sidebar: React.FC = () => {
         <div className="pt-2">
           <button
             onClick={handleCreateNewApp}
-            className="w-full flex items-center justify-center gap-2 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-full text-xs font-bold transition-all cursor-pointer shadow-[0_4px_20px_rgba(59,130,246,0.3)] hover:shadow-[0_4px_25px_rgba(59,130,246,0.5)] focus:outline-none border border-white/10"
+            className="w-full flex items-center justify-center gap-2 py-2.5 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-500 hover:via-indigo-500 hover:to-purple-500 text-white rounded-full text-xs font-bold transition-all cursor-pointer shadow-[0_0_20px_rgba(99,102,241,0.55)] hover:shadow-[0_0_25px_rgba(99,102,241,0.85)] focus:outline-none border border-white/10 hover:scale-[1.02] active:scale-[0.98]"
           >
             <Plus className="w-4 h-4 text-white shrink-0" />
             <span className="font-sans tracking-wide">Create new app</span>
@@ -138,12 +124,6 @@ export const Sidebar: React.FC = () => {
                       onClick={() => {
                         setSelectedApp(appName);
                         setShowAppDropdown(false);
-                        addNotification(
-                          'info',
-                          'Workspace App Selected',
-                          `Successfully switched current workspace view to active node context: "${appName}"`
-                        );
-                        showToastFeedback(`Switched to: ${appName}`);
                       }}
                       className="w-full text-left px-3 py-2 hover:bg-white/5 rounded-lg text-xs font-semibold text-white/80 hover:text-white transition-all flex items-center justify-between cursor-pointer"
                     >
@@ -195,10 +175,10 @@ export const Sidebar: React.FC = () => {
           <button
             onClick={() => {
               setActiveItem('all_apps');
-              showToastFeedback('Viewing all applications...');
+              setCurrentView('all_apps');
             }}
             className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer focus:outline-none 
-              ${activeItem === 'all_apps'
+              ${activeItem === 'all_apps' && currentView === 'all_apps'
                 ? 'bg-white/10 text-white border border-white/[0.05] shadow-sm' 
                 : 'text-white/60 hover:text-white hover:bg-white/5'
               }
@@ -212,11 +192,11 @@ export const Sidebar: React.FC = () => {
           <button
             onClick={() => {
               setActiveItem('integrations');
-              setCurrentView('settings');
+              setShowSettingsModal(true);
               setActiveSettingsTab('connectors');
             }}
             className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer focus:outline-none 
-              ${activeItem === 'integrations' && currentView === 'settings'
+              ${activeItem === 'integrations' && showSettingsModal
                 ? 'bg-white/10 text-white border border-white/[0.05] shadow-sm' 
                 : 'text-white/60 hover:text-white hover:bg-white/5'
               }
@@ -231,7 +211,7 @@ export const Sidebar: React.FC = () => {
         </div>
 
         {/* Favorites Header and List */}
-        <div className="flex flex-col gap-1.5">
+        <div className="flex flex-col gap-1.5 pb-4 border-b border-white/[0.03]">
           <button
             onClick={() => setShowFavorites(!showFavorites)}
             className="flex items-center justify-between text-white/40 hover:text-white/70 font-extrabold uppercase tracking-widest text-[10px] font-sans mt-4 px-3 select-none focus:outline-none w-full text-left"
@@ -259,7 +239,7 @@ export const Sidebar: React.FC = () => {
       </div>
 
       {/* Bottom Section */}
-      <div className="flex flex-col gap-5 mt-6 pt-2">
+      <div className="flex flex-col gap-5 mt-6 pt-4">
         
         {/* Support and settings links */}
         <div className="flex flex-col gap-2">
@@ -331,7 +311,7 @@ export const Sidebar: React.FC = () => {
                     <div className="flex gap-2 w-full">
                       <button
                         onClick={() => {
-                          setCurrentView('settings');
+                          setShowSettingsModal(true);
                           setActiveSettingsTab('general');
                           setShowProfileDropdown(false);
                         }}
@@ -393,20 +373,6 @@ export const Sidebar: React.FC = () => {
 
       </div>
 
-      {/* Floating toast notification inside the sidebar */}
-      <AnimatePresence>
-        {feedbackNotification && (
-          <motion.div
-            initial={{ opacity: 0, y: 15 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0 }}
-            className="fixed bottom-6 left-6 z-[9999] bg-[#0B0B0C]/90 border border-white/[0.08] py-2.5 px-4 rounded-xl shadow-lg flex items-center gap-2.5 backdrop-blur-md pointer-events-none"
-          >
-            <div className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
-            <p className="text-[11px] font-semibold text-white/90 font-sans">{feedbackNotification}</p>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </motion.aside>
   );
 };

@@ -177,11 +177,13 @@ export const StudioBackground: React.FC<StudioBackgroundProps> = ({ src }) => {
   }, [src]);
 
   return (
-    <div className="fixed inset-0 overflow-hidden pointer-events-none -z-10 bg-[#050505]">
+    <div className="fixed inset-0 overflow-hidden pointer-events-none z-0 bg-[#050505]">
       <video
         ref={videoRef}
         muted
         playsInline
+        autoPlay
+        loop
         preload="auto"
         className="absolute top-1/2 left-1/2 -translate-y-1/2 -translate-x-1/2 w-[115%] h-[115%] object-cover object-[center_top]"
         style={{ opacity: 0 }}
