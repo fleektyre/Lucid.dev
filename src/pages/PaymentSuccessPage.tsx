@@ -25,8 +25,8 @@ export const PaymentSuccessPage = () => {
 
       {status === 'success' && (
         <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="space-y-10">
-          <div className="w-24 h-24 bg-emerald-500/20 rounded-full flex items-center justify-center mx-auto border border-emerald-500/50">
-            <Check className="w-12 h-12 text-emerald-400" strokeWidth={3} />
+          <div className="w-24 h-24 bg-white/10 rounded-full flex items-center justify-center mx-auto border border-white/20">
+            <Check className="w-12 h-12 text-white" strokeWidth={3} />
           </div>
           <h2 className="text-5xl font-heading italic text-white">Payment Verified</h2>
           <p className="text-white/40 max-w-sm mx-auto">Your account has been upgraded. You now have full access to the Lucid.dev Studio.</p>

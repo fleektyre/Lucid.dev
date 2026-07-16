@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 import { User, AIState, Project, AppNotification } from '../types';
 
 interface StudioState {
@@ -39,84 +40,91 @@ interface StudioState {
   setPackageCredits: (maxAmount: number) => void;
 }
 
-export const useStudioStore = create<StudioState>((set) => ({
-  user: {
-    id: 'u1',
-    name: 'Fleetyre',
-    email: 'fleetyre77@gmail.com',
-    credits: 428,
-    maxCredits: 428,
-    avatarUrl: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop'
-  },
-  currentProject: {
-    id: 'p1',
-    name: 'Untitled Project',
-    status: 'active',
-    lastModified: '2026-05-21'
-  },
-  aiState: {
-    isTyping: false,
-    status: 'Lucid AI Active',
-    latency: 12,
-    model: 'GPT-4o'
-  },
-  isSidebarExpanded: true,
-  showPricingModal: false,
-  showOnboardingModal: false,
-  showSettingsModal: false,
-  currentView: 'chat',
-  activeSettingsTab: 'general',
-  glowFeatureEnabled: false,
-  finishSoundEnabled: true,
-  
-  notifications: [],
+export const useStudioStore = create<StudioState>()(
+  persist(
+    (set) => ({
+      user: {
+        id: 'u1',
+        name: 'Fleetyre',
+        email: 'fleetyre77@gmail.com',
+        credits: 10,
+        maxCredits: 10,
+        avatarUrl: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop'
+      },
+      currentProject: {
+        id: 'p1',
+        name: 'Untitled Project',
+        status: 'active',
+        lastModified: '2026-05-21'
+      },
+      aiState: {
+        isTyping: false,
+        status: 'Lucid AI Active',
+        latency: 12,
+        model: 'GPT-4o'
+      },
+      isSidebarExpanded: true,
+      showPricingModal: false,
+      showOnboardingModal: false,
+      showSettingsModal: false,
+      currentView: 'chat',
+      activeSettingsTab: 'general',
+      glowFeatureEnabled: false,
+      finishSoundEnabled: true,
+      
+      notifications: [],
 
-  setUser: (user) => set({ user }),
-  setProject: (currentProject) => set({ currentProject }),
-  setAIState: (state) => set((prev) => ({ aiState: { ...prev.aiState, ...state } })),
-  toggleSidebar: () => set((state) => ({ isSidebarExpanded: !state.isSidebarExpanded })),
-  setShowPricingModal: (open) => set({ showPricingModal: open }),
-  setShowOnboardingModal: (open) => {
-    if (!open && typeof window !== 'undefined') {
-      localStorage.setItem('lucid_onboarding_seen_v2', 'true');
-    }
-    set({ showOnboardingModal: open });
-  },
-  setShowSettingsModal: (open) => set({ showSettingsModal: open }),
-  setCurrentView: (currentView) => set({ currentView }),
-  setActiveSettingsTab: (activeSettingsTab) => set({ activeSettingsTab }),
-  setGlowFeatureEnabled: (glowFeatureEnabled) => set({ glowFeatureEnabled }),
-  setFinishSoundEnabled: (finishSoundEnabled) => set({ finishSoundEnabled }),
-  
-  addNotification: (type, title, message) => {},
-  
-  markNotificationAsRead: (id) => set((state) => ({
-    notifications: state.notifications.map((n) => n.id === id ? { ...n, read: true } : n)
-  })),
-  
-  markAllNotificationsAsRead: () => set((state) => ({
-    notifications: state.notifications.map((n) => ({ ...n, read: true }))
-  })),
-  
-  clearNotification: (id) => set((state) => ({
-    notifications: state.notifications.filter((n) => n.id !== id)
-  })),
-  
-  clearAllNotifications: () => set({ notifications: [] }),
+      setUser: (user) => set({ user }),
+      setProject: (currentProject) => set({ currentProject }),
+      setAIState: (state) => set((prev) => ({ aiState: { ...prev.aiState, ...state } })),
+      toggleSidebar: () => set((state) => ({ isSidebarExpanded: !state.isSidebarExpanded })),
+      setShowPricingModal: (open) => set({ showPricingModal: open }),
+      setShowOnboardingModal: (open) => {
+        if (!open && typeof window !== 'undefined') {
+          localStorage.setItem('lucid_onboarding_seen_v2', 'true');
+        }
+        set({ showOnboardingModal: open });
+      },
+      setShowSettingsModal: (open) => set({ showSettingsModal: open }),
+      setCurrentView: (currentView) => set({ currentView }),
+      setActiveSettingsTab: (activeSettingsTab) => set({ activeSettingsTab }),
+      setGlowFeatureEnabled: (glowFeatureEnabled) => set({ glowFeatureEnabled }),
+      setFinishSoundEnabled: (finishSoundEnabled) => set({ finishSoundEnabled }),
+      
+      addNotification: (type, title, message) => {},
+      
+      markNotificationAsRead: (id) => set((state) => ({
+        notifications: state.notifications.map((n) => n.id === id ? { ...n, read: true } : n)
+      })),
+      
+      markAllNotificationsAsRead: () => set((state) => ({
+        notifications: state.notifications.map((n) => ({ ...n, read: true }))
+      })),
+      
+      clearNotification: (id) => set((state) => ({
+        notifications: state.notifications.filter((n) => n.id !== id)
+      })),
+      
+      clearAllNotifications: () => set({ notifications: [] }),
 
-  addCredits: (amount) => set((state) => ({
-    user: {
-      ...state.user,
-      credits: state.user.credits + amount,
-      maxCredits: state.user.maxCredits + amount
-    }
-  })),
+      addCredits: (amount) => set((state) => ({
+        user: {
+          ...state.user,
+          credits: state.user.credits + amount,
+          maxCredits: state.user.maxCredits + amount
+        }
+      })),
 
-  setPackageCredits: (maxAmount) => set((state) => ({
-    user: {
-      ...state.user,
-      credits: maxAmount,
-      maxCredits: maxAmount
+      setPackageCredits: (maxAmount) => set((state) => ({
+        user: {
+          ...state.user,
+          credits: maxAmount,
+          maxCredits: maxAmount
+        }
+      }))
+    }),
+    {
+      name: 'lucid-studio-storage',
     }
-  }))
-}));
+  )
+);

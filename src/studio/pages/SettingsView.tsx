@@ -39,7 +39,7 @@ export const SettingsView: React.FC = () => {
     { id: 'knowledge', label: 'Knowledge', icon: BookOpen, section: 'Account' },
     { id: 'connectors', label: 'Connectors (MCP)', icon: Cpu, section: 'Account' },
     { id: 'addons', label: 'Add-on features', icon: Sparkles, section: 'Account' },
-    { id: 'subscription', label: 'Subscription & Credits', icon: CreditCard, section: 'Workspace' },
+    { id: 'subscription', label: 'Subscription & Sparks', icon: CreditCard, section: 'Workspace' },
     { id: 'cloud', label: 'Cloud', icon: Cloud, section: 'Workspace' },
   ];
 

@@ -119,14 +119,14 @@ export const TopNav: React.FC = () => {
           UPGRADE
         </button>
 
-        {/* Credits Capsule */}
+        {/* Sparks Capsule */}
         <div className="flex items-center gap-3 px-4 py-2 bg-zinc-950/40 border border-white/[0.08] rounded-full backdrop-blur-xl shadow-inner">
           <div className="flex flex-col items-end">
             <span className="text-[10px] font-extrabold text-white tracking-wider font-schibsted">
               {user.credits} / {user.maxCredits}
             </span>
             <span className="text-[7.5px] font-semibold text-white/30 uppercase tracking-[0.15em] font-fustat leading-none mt-0.5">
-              CREDITS REMAINING
+              SPARKS REMAINING
             </span>
           </div>
           <div className="w-1.5 h-1.5 rounded-full bg-white shadow-[0_0_8px_rgba(255,255,255,0.5)]" />

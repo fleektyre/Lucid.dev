@@ -11,10 +11,10 @@ interface DropdownOption {
 }
 
 const creditOptions: DropdownOption[] = [
-  { credits: '100 credits / month', pricePro: 25, priceBus: 50, desc: '100 monthly credits' },
-  { credits: '500 credits / month', pricePro: 45, priceBus: 85, desc: '500 monthly credits' },
-  { credits: '1200 credits / month', pricePro: 79, priceBus: 140, desc: '1200 monthly credits' },
-  { credits: '2000 credits / month', pricePro: 109, priceBus: 199, desc: '2000 monthly credits' }
+  { credits: '100 Sparks / month', pricePro: 25, priceBus: 50, desc: '100 monthly Sparks' },
+  { credits: '500 Sparks / month', pricePro: 65, priceBus: 90, desc: '500 monthly Sparks' },
+  { credits: '1200 Sparks / month', pricePro: 130, priceBus: 160, desc: '1200 monthly Sparks' },
+  { credits: '2000 Sparks / month', pricePro: 195, priceBus: 230, desc: '2000 monthly Sparks' }
 ];
 
 // Reusable Custom Styled Glow Card following the "Pills & Glass" design system
@@ -147,7 +147,7 @@ export default function PricingPage() {
 
               <ul className="space-y-4 pt-2">
                 {[
-                  "428 monthly computation credits",
+                  "10 Sparks per month max (hard limit, zero rollover)",
                   "Standard compilation speed",
                   "Single sandbox instances",
                   "Access to community models",
@@ -262,7 +262,7 @@ export default function PricingPage() {
 
               <ul className="space-y-4 pt-1">
                 {[
-                  `${selectedProOpt.credits.replace(" / month", " computation credits")}`,
+                  `${selectedProOpt.credits.replace(" Sparks / month", " computation Sparks")}`,
                   "Lucid Spark Compilation Engine",
                   "Vibe Sandbox Live Rendering Core",
                   "Dynamic code-to-theme templates",
@@ -380,7 +380,7 @@ export default function PricingPage() {
 
               <ul className="space-y-4 pt-1 flex-1">
                 {[
-                  `${selectedBusOpt.credits.replace(" / month", " computation credits")}`,
+                  `${selectedBusOpt.credits.replace(" Sparks / month", " computation Sparks")}`,
                   "Internal application publishing",
                   "Single Sign-On (SSO) integration",
                   "Consolidated team workspace pipelines",

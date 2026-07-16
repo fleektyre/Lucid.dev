@@ -19,10 +19,10 @@ interface DropdownOption {
 }
 
 const creditOptions: DropdownOption[] = [
-  { credits: '100 credits / month', pricePro: 25, priceBus: 50, desc: '100 monthly credits' },
-  { credits: '500 credits / month', pricePro: 45, priceBus: 85, desc: '500 monthly credits' },
-  { credits: '1200 credits / month', pricePro: 79, priceBus: 140, desc: '1200 monthly credits' },
-  { credits: '2000 credits / month', pricePro: 109, priceBus: 199, desc: '2000 monthly credits' }
+  { credits: '100 Sparks / month', pricePro: 25, priceBus: 50, desc: '100 monthly Sparks' },
+  { credits: '500 Sparks / month', pricePro: 65, priceBus: 90, desc: '500 monthly Sparks' },
+  { credits: '1200 Sparks / month', pricePro: 130, priceBus: 160, desc: '1200 monthly Sparks' },
+  { credits: '2000 Sparks / month', pricePro: 195, priceBus: 230, desc: '2000 monthly Sparks' }
 ];
 
 export const StudioBillingPage: React.FC = () => {
@@ -59,7 +59,7 @@ export const StudioBillingPage: React.FC = () => {
   const calculatedSimulatorPrice = Math.floor(simulatedCredits * 0.08);
 
   const handleCheckout = (planName: string, selectedPackage: string, price: number) => {
-    // Determine credit count from selected package text (e.g. "100 credits / month" -> 100)
+    // Determine Sparks count from selected package text (e.g. "100 Sparks / month" -> 100)
     const amount = parseInt(selectedPackage.replace(/[^0-9]/g, ''), 10) || 100;
     const isRefill = planName.toLowerCase().includes('refill') || planName.toLowerCase().includes('micro');
     const useWallet = walletBalance >= price;
@@ -70,19 +70,19 @@ export const StudioBillingPage: React.FC = () => {
         setWalletBalance(prev => Math.max(0, Number((prev - price).toFixed(2))));
         if (isRefill) {
           addCredits(amount);
-          triggerToast(`Successfully purchased +${amount} On-The-Go credits from Wallet!`);
+          triggerToast(`Successfully purchased +${amount} On-The-Go Sparks from Wallet!`);
           addNotification(
             'billing',
             'Wallet Refill Confirmed',
-            `Paid $${price} with Developer Wallet balance. +${amount} compute credits added to your active workspace.`
+            `Paid $${price} with Developer Wallet balance. +${amount} computation Sparks added to your active workspace.`
           );
         } else {
           setPackageCredits(amount);
-          triggerToast(`Workspace upgraded with Wallet: ${planName} (${amount} credits)`);
+          triggerToast(`Workspace upgraded with Wallet: ${planName} (${amount} Sparks)`);
           addNotification(
             'billing',
             'Subscription Wallet Upgrade',
-            `Upgraded workspace to ${planName} using Developer Wallet funds. Unified allowance set to ${amount} credits.`
+            `Upgraded workspace to ${planName} using Developer Wallet funds. Unified allowance set to ${amount} Sparks.`
           );
         }
       }, 1000);
@@ -91,11 +91,11 @@ export const StudioBillingPage: React.FC = () => {
       setTimeout(() => {
         if (isRefill) {
           addCredits(amount);
-          triggerToast(`Direct purchase complete: +${amount} On-The-Go credits added!`);
+          triggerToast(`Direct purchase complete: +${amount} On-The-Go Sparks added!`);
           addNotification(
             'billing',
             'On-The-Go Refill Confirmed',
-            `Paystack sandbox transfer of $${price} confirmed. +${amount} compute credits allocated to your workspace.`
+            `Paystack sandbox transfer of $${price} confirmed. +${amount} computation Sparks allocated to your workspace.`
           );
         } else {
           setPackageCredits(amount);
@@ -103,7 +103,7 @@ export const StudioBillingPage: React.FC = () => {
           addNotification(
             'billing',
             'Subscription Activated via Paystack',
-            `Successfully processed Paystack sandbox upgrade. Workspace is now on ${planName} (${amount} credits).`
+            `Successfully processed Paystack sandbox upgrade. Workspace is now on ${planName} (${amount} Sparks).`
           );
         }
       }, 1200);
@@ -119,8 +119,8 @@ export const StudioBillingPage: React.FC = () => {
     }, 1500);
   };
 
-  // Compute logs daily credit spending database Mock representation
-  const creditUsageHistory = [
+  // Compute logs daily Sparks spending database Mock representation
+  const sparksUsageHistory = [
     { date: 'June 4', spent: 12, task: 'Prompt alignment' },
     { date: 'June 5', spent: 85, task: 'Sandbox render' },
     { date: 'June 6', spent: 34, task: 'Refactoring script' },
@@ -205,7 +205,7 @@ export const StudioBillingPage: React.FC = () => {
           
           {/* Header Title section */}
           <div className="mb-10 text-left">
-            <h1 className="text-5xl font-heading italic text-white tracking-wide">Billing & Credit Environment</h1>
+            <h1 className="text-5xl font-heading italic text-white tracking-wide">Billing & Sparks Environment</h1>
             <p className="text-sm text-zinc-400 mt-1.5 font-body">
               Monitor active resource usage balances, estimate costs dynamically, simulate cloud payment gateways, and configure active compilation limits.
             </p>
@@ -224,16 +224,16 @@ export const StudioBillingPage: React.FC = () => {
                 <div className="grid grid-cols-1 md:grid-cols-5 gap-6 z-10 w-full text-left items-center">
                   <div className="md:col-span-3 flex flex-col gap-1.5">
                     <span className="text-[10px] font-black tracking-[0.2em] text-white/50 uppercase font-sans">
-                      active computation credit line
+                      active computation Spark line
                     </span>
                     <div className="flex items-baseline gap-1.5 mt-2">
                       <h3 className="text-5xl font-heading italic text-white tracking-widest leading-none">
                         {user.credits}
                       </h3>
-                      <span className="text-xs text-zinc-500 font-bold uppercase tracking-wider ml-1">Credits Remaining</span>
+                      <span className="text-xs text-zinc-500 font-bold uppercase tracking-wider ml-1">Sparks Remaining</span>
                     </div>
                     <p className="text-xs text-zinc-400 mt-2 font-body max-w-sm leading-relaxed">
-                      Credits are parsed in real-time as your workspace compiles JSX modules and interfaces with AI models. Your next package refill occurs on <span className="text-white font-bold underline">July 1, 2026</span>.
+                      Sparks are parsed in real-time as your workspace compiles JSX modules and interfaces with AI models. Your next package refill occurs on <span className="text-white font-bold underline">July 1, 2026</span>.
                     </p>
                   </div>
 
@@ -294,7 +294,7 @@ export const StudioBillingPage: React.FC = () => {
                     />
                   </div>
                   <div className="flex justify-between items-center text-[10px] text-zinc-500 mt-2 font-mono tracking-wide">
-                    <span>{user.credits} / {user.maxCredits} STANDARD CREDITS ({Math.round(Math.min(100, Math.max(0, (user.credits / user.maxCredits) * 100)))}% CAP)</span>
+                    <span>{user.credits} / {user.maxCredits} STANDARD SPARKS ({Math.round(Math.min(100, Math.max(0, (user.credits / user.maxCredits) * 100)))}% CAP)</span>
                     <span>RESET PERIOD EXPIRES IN 20 DAYS</span>
                   </div>
                 </div>
@@ -354,14 +354,14 @@ export const StudioBillingPage: React.FC = () => {
 
                 {/* Elegant Custom CSS & SVG chart */}
                 <div className="h-44 flex items-end justify-between w-full gap-2.5 px-2 select-none border-b border-zinc-900/60 pb-1">
-                  {creditUsageHistory.map((day, idx) => {
+                  {sparksUsageHistory.map((day, idx) => {
                     const maxHeight = 110; 
                     const heightPercent = (day.spent / maxHeight) * 100;
                     return (
                       <div key={idx} className="flex flex-col items-center flex-1 group gap-2 h-full justify-end cursor-pointer">
                         {/* Dynamic Tooltip display on Hover */}
                         <div className="absolute bg-[#121214] border border-zinc-800 text-[10px] font-mono text-zinc-300 py-1 px-2 rounded-lg opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity translate-y-[-125px] flex flex-col gap-0.5 z-20 shadow-xl border-white/5">
-                          <span className="font-bold text-white">{day.spent} credits</span>
+                          <span className="font-bold text-white">{day.spent} Sparks</span>
                           <span className="text-[9px] text-zinc-500">{day.task}</span>
                         </div>
 
@@ -394,7 +394,7 @@ export const StudioBillingPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* AD-HOC CREDIT SIMULATOR SLIDER */}
+              {/* AD-HOC SPARKS SIMULATOR SLIDER */}
               <div className="lg:col-span-5 p-7 bg-zinc-950/80 border border-zinc-900 rounded-[1.5rem] relative overflow-hidden flex flex-col justify-between text-left group hover:border-zinc-800 transition-all">
                 {/* Silver Aura light on Simulator */}
                 <div className="absolute top-0 right-0 w-36 h-36 bg-white/[0.012] blur-2xl pointer-events-none" />
@@ -409,7 +409,7 @@ export const StudioBillingPage: React.FC = () => {
                 <div className="my-6 space-y-4 font-sans">
                   <div className="flex justify-between items-baseline">
                     <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest font-body">Refill Units</span>
-                    <span className="text-2xl font-heading italic text-white">{simulatedCredits} Credits</span>
+                    <span className="text-2xl font-heading italic text-white">{simulatedCredits} Sparks</span>
                   </div>
 
                   {/* Elegant Range Input Slider */}
@@ -435,7 +435,7 @@ export const StudioBillingPage: React.FC = () => {
                     <span className="text-3xl font-heading italic text-white leading-none mt-1">${calculatedSimulatorPrice}</span>
                   </div>
                   <button 
-                    onClick={() => handleCheckout(`Micro-Refill`, `${simulatedCredits} Credits`, calculatedSimulatorPrice)}
+                    onClick={() => handleCheckout(`Micro-Refill`, `${simulatedCredits} Sparks`, calculatedSimulatorPrice)}
                     className="px-5 py-2.5 bg-zinc-900 border border-zinc-800 hover:border-zinc-700 text-white hover:text-black hover:bg-white text-xs font-black tracking-widest uppercase rounded-full transition-all cursor-pointer"
                   >
                     PREPAY GATEWAY
@@ -514,7 +514,7 @@ export const StudioBillingPage: React.FC = () => {
 
                     {/* Dropdown credits selector */}
                     <div className="flex flex-col gap-2 relative z-30">
-                      <label className="text-[9px] text-zinc-505 font-bold tracking-widest uppercase font-sans">Monthly Package Credits</label>
+                      <label className="text-[9px] text-zinc-505 font-bold tracking-widest uppercase font-sans">Monthly Package Sparks</label>
                       <button 
                         onClick={() => {
                           setShowProCreditsMenu(!showProCreditsMenu);
@@ -559,7 +559,7 @@ export const StudioBillingPage: React.FC = () => {
                     {/* Features list */}
                     <div className="flex flex-col gap-3.5 mt-5">
                       {[
-                        `${selectedProOpt.credits.replace(" / month", " computation credits")}`,
+                        `${selectedProOpt.credits.replace(" Sparks / month", " computation Sparks")}`,
                         'Lucid Spark Compilation Engine',
                         'Vibe Sandbox Live Rendering Core',
                         'Dynamic code-to-theme templates',
@@ -618,7 +618,7 @@ export const StudioBillingPage: React.FC = () => {
 
                     {/* Dropdown credits selector */}
                     <div className="flex flex-col gap-2 relative z-30">
-                      <label className="text-[9px] text-zinc-505 font-bold tracking-widest uppercase font-sans font-body">Monthly Package Credits</label>
+                      <label className="text-[9px] text-zinc-505 font-bold tracking-widest uppercase font-sans font-body">Monthly Package Sparks</label>
                       <button 
                         onClick={() => {
                           setShowBusCreditsMenu(!showBusCreditsMenu);
@@ -663,7 +663,7 @@ export const StudioBillingPage: React.FC = () => {
                     {/* Features list */}
                     <div className="flex flex-col gap-3.5 mt-5">
                       {[
-                        `${selectedBusOpt.credits.replace(" / month", " computation credits")}`,
+                        `${selectedBusOpt.credits.replace(" Sparks / month", " computation Sparks")}`,
                         'Internal application sandboxed publishing',
                         'Single Sign-On (SSO) secure login',
                         'Consolidated workspace pipelines',

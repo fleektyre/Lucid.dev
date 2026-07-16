@@ -1,7 +1,8 @@
 import React from 'react';
 import { 
   Sparkles, MousePointer, Sliders, FileText, User, Mail, Shield, 
-  Layers, Globe, ChevronDown, Check, MessageSquare, Settings 
+  Layers, Globe, ChevronDown, Check, MessageSquare, Settings,
+  Cpu, TrendingUp, DollarSign
 } from 'lucide-react';
 import { useStudioStore } from '../../store/useStudioStore';
 import { LucidLogo } from '../../../components/LucidLogo';
@@ -110,6 +111,26 @@ export const IDESidebar: React.FC<IDESidebarProps> = ({
               </button>
             );
           })}
+        </div>
+
+        {/* MONETIZATION & CORE ARCHITECTURE */}
+        <div className="flex flex-col gap-1 mt-4">
+          <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest px-2.5 mb-1.5">Monetization & API</span>
+          
+          <button
+            onClick={() => setActiveTab('vibe_engine')}
+            className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all ${
+              activeTab === 'vibe_engine' 
+                ? 'bg-white/10 text-white border border-white/[0.05]' 
+                : 'text-zinc-400 hover:text-white hover:bg-white/5'
+            }`}
+          >
+            <Cpu className={`w-4 h-4 ${activeTab === 'vibe_engine' ? 'text-indigo-400' : 'text-zinc-500'}`} />
+            <span className="flex-1 text-left">Vibe Engine Pro</span>
+            <span className="text-[9px] bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 px-1.5 py-0.5 rounded-md font-bold leading-none">
+              75% Margin
+            </span>
+          </button>
         </div>
 
         {/* PUBLISH MENU SECTION */}

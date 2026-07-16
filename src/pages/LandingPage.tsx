@@ -1,7 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { CinematicDeployments } from './CinematicDeployments';
 import { 
   ArrowUpRight, 
   Check, 
@@ -36,8 +35,11 @@ import {
   ArrowRight,
   Paperclip,
   Mic,
-  Search
+  Search,
+  Folder,
+  FileCode
 } from 'lucide-react';
+import { InteractiveIDEMockup } from '../studio/components/ide/InteractiveIDEMockup';
 
 // --- FadingVideo Component (rAF Driven per Spec) ---
 
@@ -268,7 +270,7 @@ const PreviewPanel = ({ activeStep }: { activeStep: number }) => {
                     {[1,2,3,4].map(i => <div key={i} className="w-8 h-8 rounded-lg bg-white/10" />)}
                   </div>
                   <div className="flex-1 space-y-4">
-                     <div className="h-48 rounded-3xl border border-white/20 bg-emerald-500/[0.02]" />
+                     <div className="h-48 rounded-3xl border border-white/20 bg-white/[0.02]" />
                      <div className="grid grid-cols-3 gap-2">
                         <div className="h-20 rounded-2xl bg-white/5" />
                         <div className="h-20 rounded-2xl bg-white/5" />
@@ -309,7 +311,166 @@ const PreviewPanel = ({ activeStep }: { activeStep: number }) => {
   );
 };
 
-const LucidLiveBuilder = () => {
+const SelfHealingStateEngine = () => {
+  const [healingStep, setHealingStep] = useState(0);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setHealingStep(prev => (prev + 1) % 6);
+    }, 3200);
+    return () => clearInterval(timer);
+  }, []);
+
+  const logs = [
+    { text: "Monitoring live runtime environment...", type: "info" },
+    { text: "⚠ EXCEPTION DETECTED: TypeError: Cannot read properties of undefined (reading 'tier')", type: "error" },
+    { text: "Source: billing_dashboard.tsx - Line 108", type: "error" },
+    { text: "Initiating Autonomic Self-Healing Pipeline...", type: "system" },
+    { text: "Synthesized patch: Safe guard optional chaining with fallback structure", type: "system" },
+    { text: "✔ Self-healed successfully in 140ms. Active production safe.", type: "success" }
+  ];
+
+  return (
+    <section id="self-healing" className="py-40 px-6 max-w-7xl mx-auto min-h-[600px] flex flex-col justify-center">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 items-center">
+        {/* Left Side: Context / Copy */}
+        <div className="lg:col-span-5 space-y-8">
+          <div className="w-14 h-14 rounded-2xl bg-white/5 flex items-center justify-center text-white mb-10 shadow-xl border border-white/5">
+            <Cpu className="w-7 h-7 animate-pulse" />
+          </div>
+          <h2 className="text-6xl font-medium tracking-tight text-white mb-8 leading-[0.95]">
+            Autonomic<br />
+            <span className="font-heading italic text-white/40">Self-Healing.</span>
+          </h2>
+          <p className="text-white/40 text-xl font-light leading-relaxed mb-12 max-w-lg">
+            Our runtime boundaries actively capture and rectify component failures. If a state property is accessed unsafely, our compilation core synthesizes defensive guards in real-time, preventing crashes before they occur.
+          </p>
+          <div className="space-y-4">
+            <div className="flex items-center gap-4 text-white/50 font-light italic">
+              <Check className="w-5 h-5 text-white" />
+              <span>Real-time crash prevention</span>
+            </div>
+            <div className="flex items-center gap-4 text-white/50 font-light italic">
+              <Check className="w-5 h-5 text-white" />
+              <span>Zero-downtime hot patches</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Right Side: Interactive Simulator Panel */}
+        <div className="lg:col-span-7 col-span-1">
+          <GlowCard gradient="radial-gradient(circle, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0) 70%)">
+            <div className="w-full h-full bg-black/60 backdrop-blur-2xl p-8 rounded-[40px] flex flex-col gap-6 font-mono min-h-[480px]">
+              {/* Header bar */}
+              <div className="flex items-center justify-between border-b border-white/5 pb-4">
+                <div className="flex items-center gap-3">
+                  <span className="h-2 w-2 rounded-full bg-white animate-pulse" />
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-white/60">AUTONOMIC HEALING AGENT</span>
+                </div>
+                <span className="text-[10px] font-semibold text-white border border-white/30 bg-white/5 px-2 py-0.5 rounded-full">ACTIVE</span>
+              </div>
+
+              {/* Console log box and Code block split */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 flex-1">
+                {/* Console logs */}
+                <div className="bg-black/40 border border-white/5 rounded-2xl p-4 flex flex-col justify-between text-[11px] min-h-[220px]">
+                  <div className="space-y-3.5">
+                    {logs.slice(0, healingStep + 1).map((log, idx) => (
+                      <motion.div
+                        key={idx}
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.3 }}
+                        className={`${
+                          log.type === 'error' ? 'text-red-400 font-semibold' :
+                          log.type === 'system' ? 'text-blue-400' :
+                          log.type === 'success' ? 'text-white font-semibold' :
+                          'text-white/40'
+                        }`}
+                      >
+                        {log.text}
+                      </motion.div>
+                    ))}
+                  </div>
+                  {healingStep < 5 && (
+                    <div className="flex items-center gap-1.5 text-[10px] text-white/20 animate-pulse">
+                      <div className="h-1.5 w-1.5 rounded-full bg-white/20" />
+                      <span>Synthesizing...</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Code Window */}
+                <div className="bg-black/40 border border-white/5 rounded-2xl p-4 flex flex-col gap-3 min-h-[220px] relative overflow-hidden">
+                  <div className="absolute top-3 right-4 text-[9px] uppercase font-bold text-white/20">Source Editor</div>
+                  <div className="text-[11px] text-white/40 border-b border-white/5 pb-2 mb-2">billing_dashboard.tsx</div>
+                  
+                  <div className="flex-1 flex flex-col justify-center font-mono text-[11px] leading-relaxed">
+                    <AnimatePresence mode="wait">
+                      {healingStep < 3 ? (
+                        <motion.div
+                          key="broken"
+                          initial={{ opacity: 0, y: 5 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -5 }}
+                          transition={{ duration: 0.3 }}
+                          className="space-y-1.5"
+                        >
+                          <span className="text-white/30">// access properties unsafely</span>
+                          <div className="p-2.5 rounded bg-red-500/10 border border-red-500/20 text-red-200">
+                            <span className="text-purple-400 font-semibold">const</span> tier = user.billing.tier;
+                          </div>
+                          <div className="text-[10px] text-red-400/80 italic mt-1 font-sans">
+                            TypeError: Cannot read properties of undefined (reading 'tier')
+                          </div>
+                        </motion.div>
+                      ) : (
+                        <motion.div
+                          key="healed"
+                          initial={{ opacity: 0, y: 5 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -5 }}
+                          transition={{ duration: 0.3 }}
+                          className="space-y-1.5"
+                        >
+                          <span className="text-white/60">// self-healing guardian injected</span>
+                          <div className="p-2.5 rounded bg-white/10 border border-white/20 text-white">
+                            <span className="text-purple-400 font-semibold">const</span> tier = user?.billing?.tier ?? <span className="text-sky-400">'free'</span>;
+                          </div>
+                          <div className="text-[10px] text-white/80 italic mt-1 font-sans">
+                            ✔ Active guard safe. Production stable.
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                </div>
+              </div>
+
+              {/* Status footer bar */}
+              <div className="grid grid-cols-3 gap-4 border-t border-white/5 pt-4 text-center">
+                <div className="space-y-1">
+                  <div className="text-[9px] font-bold uppercase tracking-wider text-white/30">Downtime Prevented</div>
+                  <div className="text-sm font-semibold text-white">100%</div>
+                </div>
+                <div className="space-y-1 border-x border-white/5">
+                  <div className="text-[9px] font-bold uppercase tracking-wider text-white/30">Healing Latency</div>
+                  <div className="text-sm font-semibold text-white">140ms</div>
+                </div>
+                <div className="space-y-1">
+                  <div className="text-[9px] font-bold uppercase tracking-wider text-white/30">Auto Recoveries</div>
+                  <div className="text-sm font-semibold text-blue-400">1,420+</div>
+                </div>
+              </div>
+            </div>
+          </GlowCard>
+        </div>
+      </div>
+    </section>
+  );
+};
+
+const LucidLiveBuilderContent = () => {
   const [activeStep, setActiveStep] = useState(0);
 
   useEffect(() => {
@@ -320,48 +481,38 @@ const LucidLiveBuilder = () => {
   }, []);
 
   return (
-    <section id="live-builder" className="py-40 px-6 max-w-7xl mx-auto min-h-screen flex flex-col justify-center">
-      <div className="text-center mb-24">
-        <div className="glass-pill px-4 py-1.5 border-white/10 text-[10px] font-bold uppercase tracking-[0.4em] text-white/40 mb-8 inline-block">
-          Lucid Live Builder
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-stretch min-h-[600px]">
+      {/* Left Side: Chat */}
+      <GlowCard gradient="radial-gradient(circle, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0) 70%)">
+        <div className="w-full h-full flex flex-col bg-black/40 backdrop-blur-2xl">
+          <div className="p-6 border-b border-white/5 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-2 h-2 rounded-full bg-white animate-pulse" />
+              <span className="text-[10px] font-bold uppercase tracking-widest text-white/80">Builder Context</span>
+            </div>
+            <Terminal className="w-4 h-4 text-white/20" />
+          </div>
+          <div className="flex-1 overflow-y-auto custom-scrollbar">
+            <ChatSimulator activeStep={activeStep} />
+          </div>
+          <div className="p-6 border-t border-white/5 flex gap-4">
+            <div className="flex-1 h-10 glass-pill border-white/10 flex items-center px-4">
+               <div className="h-2 w-2 rounded-full bg-white/20 animate-pulse" />
+            </div>
+          </div>
         </div>
-        <h2 className="text-6xl md:text-7xl font-medium tracking-tight text-white mb-6 leading-tight">Manifestation Engine.</h2>
-        <p className="text-white/40 text-xl font-light italic">Watch the AI architect your vision in real-time.</p>
-      </div>
+      </GlowCard>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-stretch min-h-[600px]">
-        {/* Left Side: Chat */}
-        <GlowCard gradient="linear-gradient(137deg, #3B82F6 0%, #8B5CF6 50%, #D946EF 100%)">
-          <div className="w-full h-full flex flex-col bg-black/40 backdrop-blur-2xl">
-            <div className="p-6 border-b border-white/5 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                <span className="text-[10px] font-bold uppercase tracking-widest text-white/80">Builder Context</span>
-              </div>
-              <Terminal className="w-4 h-4 text-white/20" />
-            </div>
-            <div className="flex-1 overflow-y-auto custom-scrollbar">
-              <ChatSimulator activeStep={activeStep} />
-            </div>
-            <div className="p-6 border-t border-white/5 flex gap-4">
-              <div className="flex-1 h-10 glass-pill border-white/10 flex items-center px-4">
-                 <div className="h-2 w-2 rounded-full bg-white/20 animate-pulse" />
-              </div>
-            </div>
-          </div>
-        </GlowCard>
-
-        {/* Right Side: Preview */}
-        <GlowCard gradient="linear-gradient(137deg, #10B981 0%, #3B82F6 100%)">
-          <div className="w-full h-full bg-black/40 backdrop-blur-2xl relative">
-             <PreviewPanel activeStep={activeStep} />
-             <div className="absolute top-6 right-6 glass-pill px-3 py-1 text-[8px] font-bold uppercase tracking-widest text-white/40 border-white/20">
-               Live Render
-             </div>
-          </div>
-        </GlowCard>
-      </div>
-    </section>
+      {/* Right Side: Preview */}
+      <GlowCard gradient="linear-gradient(137deg, #10B981 0%, #3B82F6 100%)">
+        <div className="w-full h-full bg-black/40 backdrop-blur-2xl relative">
+           <PreviewPanel activeStep={activeStep} />
+           <div className="absolute top-6 right-6 glass-pill px-3 py-1 text-[8px] font-bold uppercase tracking-widest text-white/40 border-white/20">
+             Live Render
+           </div>
+        </div>
+      </GlowCard>
+    </div>
   );
 };
 
@@ -495,7 +646,7 @@ const ChatBox = ({ className = "", onExecute }: { className?: string, onExecute?
       <div className="relative z-10 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="w-2 h-2 rounded-full bg-[#5AE14C] animate-pulse shadow-[0_0_10px_#5AE14C]" />
-          <span className="text-white/40 text-[10px] font-bold uppercase tracking-[0.2em]">60/450 Credits Available</span>
+          <span className="text-white/40 text-[10px] font-bold uppercase tracking-[0.2em]">60/450 Sparks Available</span>
         </div>
         <div className="flex items-center gap-2 text-white/30">
           <Sparkles className="w-3 h-3" />
@@ -589,7 +740,7 @@ const LightweightCompilationLog = () => {
       <div className="flex items-center gap-2 mb-8 opacity-40">
         <div className="w-3 h-3 rounded-full bg-red-500/30" />
         <div className="w-3 h-3 rounded-full bg-yellow-500/30" />
-        <div className="w-3 h-3 rounded-full bg-emerald-500/30" />
+        <div className="w-3 h-3 rounded-full bg-white/30" />
       </div>
       <div className="space-y-6">
         {steps.map((step, i) => (
@@ -602,7 +753,7 @@ const LightweightCompilationLog = () => {
             className="flex flex-col gap-2"
           >
             <div className="text-xs sm:text-sm text-white/50 flex items-center gap-2">
-              <span className="text-emerald-400 font-sans tracking-wide">➜</span>
+              <span className="text-white font-sans tracking-wide">➜</span>
               <span className="text-white/80 font-semibold">{step.cmd}</span>
             </div>
             {step.result && (
@@ -612,6 +763,349 @@ const LightweightCompilationLog = () => {
         ))}
       </div>
     </div>
+  );
+};
+
+const LightweightLayoutSynthesisLog = () => {
+  const steps = [
+    { type: 'folder', name: 'src/components', action: 'DIRECTORY CREATED' },
+    { type: 'file', name: 'RevenueDashboard.tsx', info: '14.2 kB', engine: 'VISION ENGINE' },
+    { type: 'file', name: 'MetricBadge.tsx', info: '3.1 kB', engine: 'TAILWIND SYNTHESIS' },
+    { type: 'file', name: 'AreaChartWidget.tsx', info: '8.4 kB', engine: 'CHART ENGINE' },
+    { type: 'folder', name: 'src/styles', action: 'DIRECTORY CREATED' },
+    { type: 'file', name: 'synthesis-theme.css', info: '1.9 kB', engine: 'THEME COMPILER' },
+    { type: 'file', name: 'liquid-glass.css', info: '2.4 kB', engine: 'GLASS COMPILER' },
+    { type: 'file', name: 'cinematic-vibe.css', info: '3.8 kB', engine: 'VIBE SYNTHESIS' },
+    { type: 'file', name: 'pill-utilities.css', info: '1.5 kB', engine: 'UTILITY PARSER' },
+  ];
+
+  return (
+    <div className="relative w-full h-full min-h-[460px] flex flex-col justify-center group select-none">
+      {/* Glowing Aura Effect with White Gradient */}
+      <div 
+        className="absolute inset-0 w-full h-full rounded-[3rem] opacity-30 pointer-events-none filter blur-[50px] transition-all duration-700 group-hover:opacity-75 group-hover:scale-[1.02]"
+        style={{ background: 'radial-gradient(circle, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0) 70%)' }}
+      />
+
+      {/* Foreground Card with Gradient Border */}
+      <div 
+        className="relative z-10 w-full h-full min-h-[460px] flex flex-col p-6 sm:p-10 overflow-hidden rounded-[3rem] backdrop-blur-md transition-all duration-500 text-left font-mono"
+        style={{
+          background: `linear-gradient(#050506, #020203) padding-box, linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.2) 50%, rgba(255,255,255,0.02) 100%) border-box`,
+          border: '1.5px solid transparent'
+        }}
+      >
+        <div className="flex items-center gap-2 mb-8 opacity-40">
+          <div className="w-3 h-3 rounded-full bg-red-500/30" />
+          <div className="w-3 h-3 rounded-full bg-yellow-500/30" />
+          <div className="w-3 h-3 rounded-full bg-white/30" />
+          <span className="text-[10px] text-white/30 ml-2">layout-synthesis-stream</span>
+        </div>
+        <div className="space-y-5">
+          {steps.map((step, i) => (
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, x: -15 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: i * 0.12 }}
+              className="flex flex-col"
+            >
+              {step.type === 'folder' && (
+                <div className="flex items-center gap-2 text-xs sm:text-sm pl-2 font-semibold">
+                  <span className="text-white font-sans tracking-wide">➜</span>
+                  <Folder className="w-4 h-4 text-white shrink-0" />
+                  <span className="text-white">{step.name}</span>
+                  <span className="text-[9px] uppercase tracking-wider bg-white/10 border border-white/20 text-white px-2.5 py-0.5 rounded-full ml-auto font-sans font-medium">{step.action}</span>
+                </div>
+              )}
+
+              {step.type === 'file' && (
+                <div className="flex items-center gap-2 text-xs sm:text-sm pl-8 font-medium py-0.5">
+                  <span className="text-white font-sans tracking-wide">➜</span>
+                  <FileCode className="w-4 h-4 text-white shrink-0" />
+                  <span className="text-white/80">{step.name}</span>
+                  <span className="text-white/30 font-light text-[10px] ml-1">{step.info}</span>
+                  <span className="text-[9px] uppercase tracking-wider bg-white/5 border border-white/10 text-white/60 px-2 py-0.5 rounded-full ml-auto font-sans font-medium">{step.engine}</span>
+                </div>
+              )}
+            </motion.div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const InstantComponentStashSection = () => {
+  const [zipCount, setZipCount] = useState(1482);
+  const [zippingState, setZippingState] = useState<'idle' | 'zipping' | 'completed'>('idle');
+  const [zipProgress, setZipProgress] = useState(0);
+  const [webhookUrl, setWebhookUrl] = useState('https://api.github.com/repos/user/lucid-stash/dispatches');
+  const [webhookToken, setWebhookToken] = useState('ghp_serverless_sandbox_token_xxxxxxxx');
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [syncSuccess, setSyncSuccess] = useState(false);
+
+  const handleZipDownload = () => {
+    if (zippingState !== 'idle') return;
+    setZippingState('zipping');
+    setZipProgress(0);
+
+    const interval = setInterval(() => {
+      setZipProgress((prev) => {
+        if (prev >= 100) {
+          clearInterval(interval);
+          setTimeout(() => {
+            try {
+              const fileContent = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Lucid Stash Bundle</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-[#090a0b] text-white flex items-center justify-center min-h-screen">
+  <div class="p-8 rounded-[1.5rem] bg-[#121314] border border-neutral-900 max-w-md w-full text-center">
+    <div class="w-12 h-12 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-white mx-auto mb-4">[ ]</div>
+    <h1 class="text-xl font-bold mb-2">Lucid Local Stash</h1>
+    <p class="text-xs text-white/40 mb-6">Your compiled component sandbox is ready.</p>
+    <div class="p-4 rounded-xl bg-black/40 border border-neutral-900 text-left font-mono text-[10px] text-white/80">
+      <div>✓ RevenueDashboard.tsx (14.2 kB)</div>
+      <div>✓ MetricBadge.tsx (3.1 kB)</div>
+      <div>✓ AreaChartWidget.tsx (8.4 kB)</div>
+    </div>
+  </div>
+</body>
+</html>`;
+              const blob = new Blob([fileContent], { type: 'application/octet-stream' });
+              const url = URL.createObjectURL(blob);
+              const link = document.createElement('a');
+              link.href = url;
+              link.download = 'local-sandbox-bundle.zip';
+              document.body.appendChild(link);
+              link.click();
+              document.body.removeChild(link);
+              URL.revokeObjectURL(url);
+            } catch (err) {
+              console.error(err);
+            }
+            setZippingState('completed');
+            setZipCount(prevCount => prevCount + 1);
+            setTimeout(() => {
+              setZippingState('idle');
+            }, 3000);
+          }, 500);
+          return 100;
+        }
+        return prev + 10;
+      });
+    }, 80);
+  };
+
+  const handleSyncPipeline = () => {
+    if (isSyncing) return;
+    setIsSyncing(true);
+    setSyncSuccess(false);
+
+    setTimeout(() => {
+      setIsSyncing(false);
+      setSyncSuccess(true);
+      setTimeout(() => setSyncSuccess(false), 3000);
+    }, 1500);
+  };
+
+  return (
+    <section id="component-stash" className="py-40 px-6 bg-black relative overflow-hidden border-t border-neutral-900">
+      <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-white/5 blur-[120px] rounded-full pointer-events-none" />
+      
+      <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-24 items-center">
+        
+        {/* Left-Hand Column */}
+        <motion.div
+          initial={{ opacity: 0, x: -40 }}
+          whileInView={{ opacity: 1, x: 0 }}
+          viewport={{ margin: "-100px" }}
+          transition={{ duration: 1 }}
+        >
+          <div className="w-14 h-14 bg-white/5 border border-white/10 rounded-2xl flex items-center justify-center text-white font-mono font-bold text-xl relative overflow-hidden shadow-lg shadow-white/5 mb-10">
+            <span className="relative z-10 text-white font-mono">[ ]</span>
+            <div className="absolute inset-0 bg-gradient-to-tr from-white/10 to-transparent" />
+          </div>
+
+          <h2 className="text-5xl md:text-6xl font-heading italic text-white mb-8 leading-[1.05] tracking-tight">
+            Instant Component <br />
+            <span className="text-white/40">Stash.</span>
+          </h2>
+
+          <p className="text-white/40 text-xl font-light leading-relaxed mb-12 max-w-lg font-sans">
+            Export layout variations instantly. Every asset and configuration is synthesized directly in your browser with zero server overhead.
+          </p>
+
+          <div className="space-y-4">
+            {[
+              { label: "Zero Server Overheads", desc: "Completely serverless client-side generation." },
+              { label: "Client-Side Zipping", desc: "Bundle and package assets securely in-browser." },
+              { label: "Frictionless Export", desc: "Sync stashes directly to GitHub." }
+            ].map((item, index) => (
+              <div key={index} className="flex gap-4 items-start">
+                <div className="mt-1 w-5 h-5 rounded-full bg-white/5 border border-white/10 flex items-center justify-center flex-shrink-0 text-white">
+                  <Check className="w-3 h-3" />
+                </div>
+                <div>
+                  <h4 className="text-white/80 text-sm font-semibold font-sans">{item.label}</h4>
+                  <p className="text-white/40 text-xs font-sans mt-0.5">{item.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </motion.div>
+
+        {/* Right-Hand Column */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          whileInView={{ opacity: 1, scale: 1 }}
+          viewport={{ margin: "-100px" }}
+          className="relative"
+        >
+          {/* Glowing Aura Effect with White Gradient */}
+          <div className="absolute inset-0 bg-white/10 blur-[80px] rounded-full pointer-events-none" />
+          
+          <div className="relative bg-[#090a0b] border border-neutral-900 rounded-[1.5rem] p-6 sm:p-8 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.8)] liquid-glass overflow-hidden">
+            
+            <div className="flex items-center justify-between border-b border-neutral-900 pb-5 mb-6">
+              <div className="flex items-center gap-3">
+                <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-white/80 font-bold">COMPILING LOCAL STASH</span>
+              </div>
+              <div className="flex items-center gap-2 px-3 py-1 bg-white/5 border border-white/10 rounded-full">
+                <span className="w-1.5 h-1.5 rounded-full bg-white shadow-[0_0_8px_#ffffff] animate-pulse" />
+                <span className="text-[9px] font-mono font-bold tracking-widest text-white/85">LOCAL RUNTIME</span>
+              </div>
+            </div>
+
+            <div className="space-y-6">
+              
+              <div className="grid grid-cols-3 gap-3">
+                <div className="bg-black/40 border border-neutral-900 rounded-xl p-4 text-center">
+                  <span className="block text-[9px] uppercase tracking-wider text-white/30 font-medium font-sans">DOWNTIME SAVED</span>
+                  <span className="block text-xl font-heading italic text-white mt-1">100%</span>
+                </div>
+                <div className="bg-black/40 border border-neutral-900 rounded-xl p-4 text-center">
+                  <span className="block text-[9px] uppercase tracking-wider text-white/30 font-medium font-sans">ZIP SPEED</span>
+                  <span className="block text-xl font-heading italic text-white mt-1">&lt; 32ms</span>
+                </div>
+                <div className="bg-black/40 border border-neutral-900 rounded-xl p-4 text-center">
+                  <span className="block text-[9px] uppercase tracking-wider text-white/30 font-medium font-sans">LOCAL EXPORTS</span>
+                  <span className="block text-xl font-heading italic text-white mt-1 font-mono">{zipCount}</span>
+                </div>
+              </div>
+
+              <div className="bg-black border border-neutral-900 rounded-xl p-5 relative overflow-hidden font-mono">
+                <div className="absolute top-2 right-3 text-[8px] uppercase tracking-widest text-white/20">Client-Side Zipping</div>
+                <div className="space-y-2 text-xs">
+                  <div className="flex items-center gap-2 text-white/40">
+                    <span className="text-white">➜</span>
+                    <span>Direct-to-Desktop compilation pipeline ready.</span>
+                  </div>
+                  
+                  {zippingState === 'idle' && (
+                    <div className="text-white/20 italic text-[11px] py-1">Ready to compress local sandbox assets...</div>
+                  )}
+
+                  {zippingState === 'zipping' && (
+                    <div className="space-y-2 py-1">
+                      <div className="text-white flex items-center justify-between text-[11px]">
+                        <span>Packing local-sandbox-bundle.zip...</span>
+                        <span>{zipProgress}%</span>
+                      </div>
+                      <div className="w-full h-1 bg-neutral-900 rounded-full overflow-hidden">
+                        <div className="h-full bg-gradient-to-r from-white to-neutral-400 transition-all duration-100" style={{ width: `${zipProgress}%` }} />
+                      </div>
+                      <div className="text-[10px] text-white/30 space-y-0.5 pl-4">
+                        {zipProgress >= 20 && <div>✓ Synthesized package.json config</div>}
+                        {zipProgress >= 50 && <div>✓ Packed RevenueDashboard.tsx (14.2 kB)</div>}
+                        {zipProgress >= 80 && <div>✓ Packed synthesis-theme.css (1.9 kB)</div>}
+                      </div>
+                    </div>
+                  )}
+
+                  {zippingState === 'completed' && (
+                    <div className="space-y-1.5 py-1">
+                      <div className="text-white flex items-center gap-2 font-bold text-[11px]">
+                        <span>✓ Compression finished successfully</span>
+                      </div>
+                      <div className="text-[10px] text-white/40 leading-relaxed">
+                        Downloaded <span className="text-white">local-sandbox-bundle.zip</span> safely via standard client-side browser file blob APIs.
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <div className="mt-5 pt-4 border-t border-neutral-900/60 flex justify-end">
+                  <button 
+                    onClick={handleZipDownload}
+                    disabled={zippingState !== 'idle'}
+                    className="cursor-pointer bg-white hover:bg-neutral-200 text-black border border-white/10 rounded-full px-5 py-2 text-[10px] font-bold uppercase tracking-widest transition-all duration-300 hover:scale-105 active:scale-95 disabled:opacity-50 disabled:scale-100 flex items-center gap-2"
+                  >
+                    <Download className="w-3.5 h-3.5" />
+                    <span>{zippingState === 'zipping' ? 'COMPRESSING...' : zippingState === 'completed' ? 'DOWNLOADED!' : 'STASH & DOWNLOAD ZIP'}</span>
+                  </button>
+                </div>
+              </div>
+
+              <div className="bg-black/20 border border-neutral-900 rounded-xl p-5 space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-white/60">
+                    <Github className="w-4 h-4 text-white" />
+                    <span className="text-xs font-semibold font-sans">Webhook Sync Parameters</span>
+                  </div>
+                  <span className="text-[8px] font-mono text-white/60 uppercase tracking-wider bg-white/5 border border-white/10 px-2 py-0.5 rounded-full">Serverless Token</span>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+                  <div>
+                    <label className="block text-[9px] uppercase tracking-wider text-white/30 mb-1.5 font-sans font-medium">Target Webhook Repository</label>
+                    <input 
+                      type="text" 
+                      value={webhookUrl}
+                      onChange={(e) => setWebhookUrl(e.target.value)}
+                      className="w-full bg-[#090a0b] border border-neutral-900 rounded-lg p-2.5 font-mono text-[10px] text-white/60 focus:outline-none focus:border-white/30 transition-colors"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[9px] uppercase tracking-wider text-white/30 mb-1.5 font-sans font-medium">Serverless Auth Token</label>
+                    <input 
+                      type="password" 
+                      value={webhookToken}
+                      onChange={(e) => setWebhookToken(e.target.value)}
+                      className="w-full bg-[#090a0b] border border-neutral-900 rounded-lg p-2.5 font-mono text-[10px] text-white/60 focus:outline-none focus:border-white/30 transition-colors"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between pt-2">
+                  <div className="text-[10px] text-white/30 italic font-sans max-w-[200px] leading-tight">
+                    {syncSuccess ? (
+                      <span className="text-white font-semibold">✓ Webhook dispatched with token payload.</span>
+                    ) : (
+                      "Triggers developer workflows without hosting overhead."
+                    )}
+                  </div>
+                  <button 
+                    onClick={handleSyncPipeline}
+                    disabled={isSyncing}
+                    className="cursor-pointer bg-white text-black hover:bg-neutral-200 border-none rounded-full px-5 py-2 text-[10px] font-bold uppercase tracking-widest transition-all duration-300 hover:scale-105 active:scale-95 disabled:opacity-50"
+                  >
+                    {isSyncing ? 'SYNCING...' : 'TRIGGER PIPELINE SYNC'}
+                  </button>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </motion.div>
+
+      </div>
+    </section>
   );
 };
 
@@ -789,7 +1283,7 @@ const VideoDemoCard = ({ onViewChange }: { onViewChange: (v: any) => void }) => 
     className="relative group w-full"
   >
     <GlowCard 
-      gradient="linear-gradient(137deg, #3B82F6 0%, #10B981 50%, #8B5CF6 100%)"
+      gradient="radial-gradient(circle, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0) 80%)"
       className="aspect-video lg:aspect-[16/7] overflow-hidden"
     >
       <div className="relative w-full h-full rounded-[28px] overflow-hidden border border-white/10 group-hover:border-white/20 transition-colors bg-black">
@@ -838,7 +1332,7 @@ const VideoDemoCard = ({ onViewChange }: { onViewChange: (v: any) => void }) => 
                   "Free credits"
                 ].map((text, i) => (
                   <div key={i} className="flex items-center gap-2 group shrink-0">
-                    <div className="w-1 h-1 md:w-1.5 md:h-1.5 rounded-full bg-emerald-400 group-hover:animate-pulse shadow-[0_0_10px_#34d399]" />
+                    <div className="w-1 h-1 md:w-1.5 md:h-1.5 rounded-full bg-white group-hover:animate-pulse shadow-[0_0_10px_#ffffff]" />
                     <span className="text-[8px] md:text-[10px] font-bold uppercase tracking-[0.2em] md:tracking-[0.25em] text-white/30 group-hover:text-white/50 transition-colors">{text}</span>
                   </div>
                 ))}
@@ -850,7 +1344,7 @@ const VideoDemoCard = ({ onViewChange }: { onViewChange: (v: any) => void }) => 
         {/* UI Overlay Indicators */}
         <div className="absolute top-8 right-8 flex items-center gap-2 glass-pill px-4 py-2 border-white/20 z-20">
           <div className="flex gap-1.5">
-            <motion.div animate={{ opacity: [0.3, 1, 0.3] }} transition={{ repeat: Infinity, duration: 1 }} className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+            <motion.div animate={{ opacity: [0.3, 1, 0.3] }} transition={{ repeat: Infinity, duration: 1 }} className="w-1.5 h-1.5 rounded-full bg-white" />
             <motion.div animate={{ opacity: [0.3, 1, 0.3] }} transition={{ repeat: Infinity, duration: 1, delay: 0.2 }} className="w-1.5 h-1.5 rounded-full bg-blue-400" />
           </div>
           <span className="text-[9px] font-bold uppercase tracking-widest text-white/60">Synthesis Active</span>
@@ -916,7 +1410,7 @@ const NewsletterForm = () => {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0 }}
-              className="absolute -bottom-6 left-2 text-[10px] text-emerald-400 font-medium"
+              className="absolute -bottom-6 left-2 text-[10px] text-white font-medium"
             >
               Subscribed successfully! Welcome to the loop.
             </motion.p>
@@ -1020,7 +1514,7 @@ const FinalCTAFAQSection = ({ onViewChange }: { onViewChange: (v: any) => void }
               className="font-heading italic leading-[1.1] mb-[20px] text-white"
               style={{ fontSize: 'clamp(3rem, 8vw, 4.5rem)', letterSpacing: '-0.03em' }}
             >
-              Ready to Ship<br/>Without Limits?
+              Ready to Ship<br/>Without <span className="text-white/40">Limits?</span>
             </h2>
             <p className="text-[1rem] md:text-[1.1rem] mb-[40px] font-light opacity-90 italic max-w-md mx-auto">
               Manifest your software vision at the speed of thought.
@@ -1169,14 +1663,14 @@ const CreditTopUpCalculator = ({ user }: { user: any }) => {
   const [pages, setPages] = useState(5);
   const [taskType, setTaskType] = useState<'design' | 'development' | 'both'>('both');
 
-  const calculateCredits = () => {
+  const calculateSparks = () => {
     let base = 80;
     if (taskType === 'design') base = 30;
     if (taskType === 'development') base = 50;
     return Math.ceil(base * pages);
   };
 
-  const handleBuyCredits = async (pkg: any) => {
+  const handleBuySparks = async (pkg: any) => {
     try {
       const response = await fetch('/api/paystack/initialize', {
         method: 'POST',
@@ -1201,7 +1695,7 @@ const CreditTopUpCalculator = ({ user }: { user: any }) => {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 mt-20">
       <div className="glass-card p-10 rounded-[2.5rem] border-white/5 space-y-8">
-        <h3 className="text-2xl font-heading italic text-white">Refill Credits</h3>
+        <h3 className="text-2xl font-heading italic text-white">Refill Sparks</h3>
         <div className="space-y-6">
           <div className="flex gap-2">
             {(['design', 'development', 'both'] as const).map(t => (
@@ -1226,8 +1720,8 @@ const CreditTopUpCalculator = ({ user }: { user: any }) => {
           </div>
         </div>
         <div className="pt-6 border-t border-white/5 flex justify-between items-center">
-          <span className="text-white/20 text-xs font-bold uppercase tracking-widest">Est. Credits Needed</span>
-          <div className="text-3xl font-heading italic text-white">{calculateCredits()} pts</div>
+          <span className="text-white/20 text-xs font-bold uppercase tracking-widest">Est. Sparks Needed</span>
+          <div className="text-3xl font-heading italic text-white">{calculateSparks()} pts</div>
         </div>
       </div>
 
@@ -1239,11 +1733,11 @@ const CreditTopUpCalculator = ({ user }: { user: any }) => {
         ].map(pkg => (
           <div key={pkg.id} className={`p-6 rounded-[2rem] border transition-all flex items-center justify-between ${pkg.highlight ? 'bg-white text-black border-white' : 'bg-white/5 text-white border-white/5'}`}>
             <div>
-              <div className="text-lg font-heading italic">{pkg.credits} Credits</div>
+              <div className="text-lg font-heading italic">{pkg.credits} Sparks</div>
               <p className={`text-[10px] font-bold uppercase tracking-widest ${pkg.highlight ? 'text-black/40' : 'text-white/20'}`}>{pkg.desc}</p>
             </div>
             <button 
-              onClick={() => handleBuyCredits(pkg)}
+              onClick={() => handleBuySparks(pkg)}
               className={`px-6 py-3 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all ${pkg.highlight ? 'bg-black text-white hover:scale-105' : 'bg-white text-black'}`}
             >
               ${pkg.price}
@@ -1275,8 +1769,8 @@ const PaymentSuccessPage = ({ onViewChange }: { onViewChange: (v: any) => void }
       {status === 'verifying' && <div className="text-white/40 animate-pulse">Syncing transactions...</div>}
       {status === 'success' && (
         <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="space-y-8">
-          <div className="w-24 h-24 rounded-full bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center mx-auto">
-            <Check className="w-12 h-12 text-emerald-400" strokeWidth={3} />
+          <div className="w-24 h-24 rounded-full bg-white/10 border border-white/20 flex items-center justify-center mx-auto">
+            <Check className="w-12 h-12 text-white" strokeWidth={3} />
           </div>
           <h2 className="text-5xl font-heading italic text-white">Payment Verified</h2>
           <button onClick={() => navigate('/login')} className="bg-white text-black px-12 py-5 rounded-2xl text-[10px] font-bold uppercase tracking-widest">Return to Dashboard</button>
@@ -1341,10 +1835,10 @@ const LandingView = ({ onViewChange, onStartBuilding }: { onViewChange: (v: any)
           <div className="flex items-center justify-center gap-8 mt-10">
             {[
               { text: "No credit card", icon: "shield" },
-              { text: "Free credits", icon: "sparkles" }
+              { text: "Free Sparks", icon: "sparkles" }
             ].map((item, i) => (
               <div key={i} className="flex items-center gap-3 group">
-                <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_12px_#34d399] group-hover:scale-125 transition-transform" />
+                <div className="w-1.5 h-1.5 rounded-full bg-white shadow-[0_0_12px_#ffffff] group-hover:scale-125 transition-transform" />
                 <span className="text-[10px] font-bold uppercase tracking-[0.25em] text-white/30 group-hover:text-white/60 transition-colors">{item.text}</span>
               </div>
             ))}
@@ -1361,13 +1855,13 @@ const LandingView = ({ onViewChange, onStartBuilding }: { onViewChange: (v: any)
       <div id="features-section">
         <FeatureSection
           title="Predictive Compilation Engine"
-          description="Build and deploy with zero configurations. We compile AST-level edits down to modularized ESM in under 420ms, stream hot modules, and keep codebases safe."
+          description="The future of frictionless frontend composition. By optimizing prompts and isolating file differences locally, the Lucid Engine compiles changes smoothly, keeping your sandbox safe and deployment pipelines lightning fast."
           tags={["Direct Compilation", "ESM Bundle Output", "Under 420ms Latency"]}
-          icon={<Terminal className="w-6 h-6 text-emerald-400" />}
+          icon={<Terminal className="w-6 h-6 text-white" />}
           preview={<LightweightCompilationLog />}
         />
       </div>
-      <LucidLiveBuilder />
+      <InstantComponentStashSection />
 
       {/* Section 3: SCREENSHOT TO CODE */}
 
@@ -1377,18 +1871,31 @@ const LandingView = ({ onViewChange, onStartBuilding }: { onViewChange: (v: any)
             initial={{ opacity: 0, scale: 0.95 }}
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ margin: "-100px" }}
-            className="lg:order-last glass-card rounded-[3.5rem] h-[560px] bg-white/[0.01] border-white/10 flex flex-col items-center justify-center p-12 relative overflow-hidden group shadow-2xl"
+            className="lg:order-last relative h-[560px] w-full flex flex-col items-center justify-center group"
           >
-            <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center">
-               <div className="w-24 h-24 rounded-full border border-white/10 flex items-center justify-center mb-8 relative">
+            {/* Glowing Aura Effect with White Gradient */}
+            <div 
+              className="absolute inset-0 w-full h-full rounded-[3.5rem] opacity-30 pointer-events-none filter blur-[50px] transition-all duration-700 group-hover:opacity-75 group-hover:scale-[1.05]"
+              style={{ background: 'radial-gradient(circle, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0) 70%)' }}
+            />
+
+            {/* Foreground Card with Gradient Border */}
+            <div 
+              className="relative z-10 w-full h-full rounded-[3.5rem] p-12 flex flex-col items-center justify-center bg-black/45 backdrop-blur-md border border-white/5 hover:border-white/10 transition-all duration-500"
+              style={{
+                background: `linear-gradient(#050506, #020203) padding-box, linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.2) 50%, rgba(255,255,255,0.02) 100%) border-box`,
+                border: '1.5px solid transparent'
+              }}
+            >
+              <div className="w-24 h-24 rounded-full border border-white/10 flex items-center justify-center mb-8 relative">
                  <Plus className="w-8 h-8 text-white/20 group-hover:text-white group-hover:scale-110 transition-all" />
                  <motion.div 
                    animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.6, 0.3] }}
                    transition={{ duration: 3, repeat: Infinity }}
                    className="absolute inset-0 rounded-full border border-white/20" 
                  />
-               </div>
-               <p className="text-[11px] font-bold uppercase tracking-[0.4em] text-white/20">Drop reference screenshot</p>
+              </div>
+              <p className="text-[11px] font-bold uppercase tracking-[0.4em] text-white/20">Drop reference screenshot</p>
             </div>
           </motion.div>
 
@@ -1401,21 +1908,24 @@ const LandingView = ({ onViewChange, onStartBuilding }: { onViewChange: (v: any)
             <div className="w-14 h-14 rounded-2xl bg-white/5 flex items-center justify-center text-white mb-10 shadow-xl border border-white/5">
               <ImageIcon className="w-7 h-7" />
             </div>
-            <h2 className="text-6xl font-medium tracking-tight text-white mb-8 leading-[0.95]">Turn Any Screenshot<br />Into Real Code.</h2>
+            <h2 className="text-5xl md:text-6xl font-heading italic text-white mb-8 leading-[1.05] tracking-tight">
+              Turn Any Screenshot <br />
+              Into Real <span className="text-white/40">Code.</span>
+            </h2>
             <p className="text-white/40 text-xl font-light leading-relaxed mb-12 max-w-lg">
               Upload designs, wireframes, or inspiration images and instantly reconstruct them into editable applications using our Vision Engine.
             </p>
             <div className="space-y-4">
               <div className="flex items-center gap-4 text-white/50 font-light italic">
-                <Check className="w-5 h-5 text-emerald-500" />
+                <Check className="w-5 h-5 text-white" />
                 <span>Pixel-perfect layout extraction</span>
               </div>
               <div className="flex items-center gap-4 text-white/50 font-light italic">
-                <Check className="w-5 h-5 text-emerald-500" />
+                <Check className="w-5 h-5 text-white" />
                 <span>Automated typography detection</span>
               </div>
               <div className="flex items-center gap-4 text-white/50 font-light italic">
-                <Check className="w-5 h-5 text-emerald-500" />
+                <Check className="w-5 h-5 text-white" />
                 <span>One-click React conversion</span>
               </div>
             </div>
@@ -1423,7 +1933,7 @@ const LandingView = ({ onViewChange, onStartBuilding }: { onViewChange: (v: any)
         </div>
       </section>
 
-      {/* Section 4: FULL APP GENERATION */}
+      {/* Section 4: AI LAYOUT SYNTHESIS */}
       <section className="py-40 px-6 bg-black relative">
         <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-24 items-center">
           <motion.div
@@ -1433,16 +1943,18 @@ const LandingView = ({ onViewChange, onStartBuilding }: { onViewChange: (v: any)
             transition={{ duration: 1 }}
           >
             <div className="w-14 h-14 rounded-2xl bg-white/5 flex items-center justify-center text-white mb-10 shadow-xl border border-white/5">
-              <ArrowUpRight className="w-7 h-7" />
+              <div className="w-8 h-8 rounded-full border border-white/10 bg-white/5 flex items-center justify-center font-heading text-lg italic text-white">
+                l
+              </div>
             </div>
-            <h2 className="text-6xl font-medium tracking-tight text-white mb-8 leading-[0.95]">Build Entire<br />Applications Instantly.</h2>
-            <p className="text-white/40 text-xl font-light leading-relaxed mb-12 max-w-lg">
-              Generate complete full-stack applications including routing, components, and deployment-ready architecture from a single prompt.
+            <h2 className="text-5xl md:text-6xl font-heading italic text-white mb-8 leading-[1.05] tracking-tight">AI Layout <br /><span className="text-white/40">Synthesis.</span></h2>
+            <p className="text-white/40 text-xl font-light leading-relaxed mb-12 max-w-lg font-sans">
+              Design fluid and responsive web interfaces instantly. We synthesize elegant, high-fidelity visual layouts down to beautiful tailwind-styled code structures with zero friction.
             </p>
             <div className="glass-pill p-6 border-white/5 bg-white/[0.01]">
               <div className="flex items-center gap-3 text-xs font-mono text-white/40 italic">
-                <Terminal className="w-4 h-4" />
-                <span>lucid deploy build-next-auth-stripe</span>
+                <Terminal className="w-4 h-4 text-indigo-400" />
+                <span>lucid compile --layout-synth dashboard_card</span>
               </div>
             </div>
           </motion.div>
@@ -1451,33 +1963,15 @@ const LandingView = ({ onViewChange, onStartBuilding }: { onViewChange: (v: any)
             initial={{ opacity: 0, scale: 0.95 }}
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ margin: "-100px" }}
-            className="glass-card rounded-[3.5rem] h-[560px] bg-black/60 border-white/10 flex flex-col p-8 overflow-hidden font-mono shadow-2xl"
+            className="w-full h-full flex flex-col justify-center"
           >
-            <div className="flex items-center gap-2 mb-8 opacity-40">
-              <div className="w-3 h-3 rounded-full bg-red-500/30" />
-              <div className="w-3 h-3 rounded-full bg-yellow-500/30" />
-              <div className="w-3 h-3 rounded-full bg-emerald-500/30" />
-            </div>
-            <div className="space-y-4">
-               {['app/', '  layout.tsx', '  (auth)/', '    login/page.tsx', '    signup/page.tsx', '  (dashboard)/', '    overview/page.tsx', '  api/', '    webhooks/stripe/'].map((line, i) => (
-                 <motion.div 
-                   key={i}
-                   initial={{ opacity: 0, x: -10 }}
-                   whileInView={{ opacity: 1, x: 0 }}
-                   transition={{ delay: i * 0.05 }}
-                   className={`text-xs ${line.includes('/') ? 'text-white/50' : 'text-white/30'} flex items-center gap-3`}
-                 >
-                   <span className="text-white/10 font-sans">{i + 1}</span>
-                   {line}
-                 </motion.div>
-               ))}
-            </div>
+            <LightweightLayoutSynthesisLog />
           </motion.div>
         </div>
       </section>
 
-      {/* Section 5: CINEMATIC EDGE DEPLOYMENTS */}
-      <section id="api-section" className="py-64 px-6 bg-black relative overflow-hidden">
+      {/* Section 5: MANIFESTATION ENGINE */}
+      <section id="live-builder" className="py-64 px-6 bg-black relative overflow-hidden">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[1px] bg-gradient-to-r from-transparent via-white/10 to-transparent" />
         
         <div className="max-w-4xl mx-auto text-center mb-24 relative">
@@ -1486,7 +1980,7 @@ const LandingView = ({ onViewChange, onStartBuilding }: { onViewChange: (v: any)
             whileInView={{ opacity: 1, y: 0 }}
             className="w-16 h-16 rounded-2xl bg-white/5 flex items-center justify-center text-white mb-10 mx-auto shadow-2xl border border-white/10 backdrop-blur-xl"
           >
-            <Globe className="w-8 h-8 text-sky-400" />
+            <Sparkles className="w-8 h-8 text-indigo-400" />
           </motion.div>
           <motion.h2 
             initial={{ opacity: 0, y: 20 }}
@@ -1494,7 +1988,7 @@ const LandingView = ({ onViewChange, onStartBuilding }: { onViewChange: (v: any)
             transition={{ delay: 0.1 }}
             className="text-6xl md:text-8xl font-heading italic tracking-tighter text-white mb-10"
           >
-            Cinematic Edge <span className="opacity-30">Deployments.</span>
+            Manifestation <span className="opacity-30">Engine.</span>
           </motion.h2>
           <motion.p 
             initial={{ opacity: 0, y: 20 }}
@@ -1502,14 +1996,14 @@ const LandingView = ({ onViewChange, onStartBuilding }: { onViewChange: (v: any)
             transition={{ delay: 0.2 }}
             className="text-white/40 text-xl md:text-2xl font-body font-light leading-relaxed max-w-2xl mx-auto font-sans"
           >
-            Broadcast your vibe sandbox creations globally with a single click. Instantly routed, optimized to 24 locations, and secured natively.
+            Watch the AI architect your vision in real-time. Direct-to-DOM compilation that updates layout patterns dynamically.
           </motion.p>
         </div>
 
-        <div className="max-w-6xl mx-auto relative group">
-           <div className="absolute inset-0 bg-sky-500/5 blur-[100px] rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
-           <CinematicDeployments />
-        </div>
+        <div className="max-w-7xl mx-auto relative group">
+           <div className="absolute inset-0 bg-indigo-500/5 blur-[100px] rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
+           <LucidLiveBuilderContent />
+         </div>
       </section>
 
       <SectionDivider />
@@ -1550,7 +2044,7 @@ const PriceCard = ({ title, price, description, features, cta, popular, credits,
             <span className="text-[10px] font-bold uppercase tracking-widest text-white/30">Generation Fuel</span>
             <Zap className="h-3.5 w-3.5 text-yellow-500" />
           </div>
-          <div className="text-xl font-heading italic text-white">{credits} Credits</div>
+          <div className="text-xl font-heading italic text-white">{credits} Sparks</div>
         </div>
 
         <div className="space-y-4 flex-1">
@@ -1587,7 +2081,18 @@ const FeatureSection = ({ title, description, tags, icon, preview, reversed }: a
       <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center text-white mb-8">
         {icon}
       </div>
-      <h2 className="text-5xl font-heading italic text-white mb-6 leading-tight tracking-tight">{title}</h2>
+      <h2 className="text-5xl font-heading italic text-white mb-6 leading-tight tracking-tight">
+        {(() => {
+          const words = title.split(' ');
+          if (words.length <= 1) return title;
+          const last = words.pop();
+          return (
+            <>
+              {words.join(' ')} <span className="text-white/40">{last}</span>
+            </>
+          );
+        })()}
+      </h2>
       <p className="text-white/40 text-lg font-light leading-relaxed mb-8 max-w-lg">{description}</p>
       {tags && (
         <div className="flex flex-wrap gap-2">
@@ -1603,9 +2108,24 @@ const FeatureSection = ({ title, description, tags, icon, preview, reversed }: a
       initial={{ opacity: 0, scale: 0.95 }}
       whileInView={{ opacity: 1, scale: 1 }}
       viewport={{ once: true }}
-      className="relative rounded-[3rem] overflow-hidden h-[400px] border border-white/5 bg-white/[0.01]"
+      className="relative w-full h-[400px] flex flex-col justify-center group"
     >
-      {preview}
+      {/* Glowing Aura Effect with White Gradient */}
+      <div 
+        className="absolute inset-0 w-full h-full rounded-[3rem] opacity-30 pointer-events-none filter blur-[50px] transition-all duration-700 group-hover:opacity-75 group-hover:scale-[1.02]"
+        style={{ background: 'radial-gradient(circle, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0) 70%)' }}
+      />
+
+      {/* Foreground Card with White Gradient Border */}
+      <div 
+        className="relative z-10 w-full h-full rounded-[3rem] overflow-hidden backdrop-blur-md transition-all duration-500"
+        style={{
+          background: `linear-gradient(#050506, #020203) padding-box, linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.2) 50%, rgba(255,255,255,0.02) 100%) border-box`,
+          border: '1.5px solid transparent'
+        }}
+      >
+        {preview}
+      </div>
     </motion.div>
   </section>
 );
@@ -1687,7 +2207,7 @@ const AuthPage = ({ onViewChange }: { onViewChange: (v: any) => void }) => {
           playsInline
           className="absolute inset-0 w-full h-full object-cover z-0 pointer-events-none"
         >
-          <source src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260418_094631_d30ab262-45ee-4b7d-99f3-5d5848c8ef13.mp4" type="video/mp4" />
+          <source src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260418_115655_b4d9cd77-feed-43cd-a198-af78ebdf1f7a.mp4" type="video/mp4" />
         </video>
 
         {/* Hero Nav */}
@@ -1770,7 +2290,7 @@ const AuthPage = ({ onViewChange }: { onViewChange: (v: any) => void }) => {
         <div className="w-full max-w-lg space-y-10">
           <header className="space-y-4">
             <span className="text-[10px] font-bold uppercase tracking-[0.5em] text-white/30 block">Get Started</span>
-            <h2 className="text-4xl font-medium tracking-tight text-white">Create Your Lucid Workspace</h2>
+            <h2 className="text-4xl font-medium tracking-tight text-white">Create Your Lucid <span className="text-white/40">Workspace</span></h2>
             <p className="text-white/50 text-base font-light">
               Access AI-powered app generation, visual editing, and production-ready exports.
             </p>
@@ -2071,7 +2591,7 @@ const GeneratorPage = ({ initialPrompt, onViewChange }: { initialPrompt?: string
                          <div className="flex gap-1.5">
                             <div className="w-2.5 h-2.5 rounded-full bg-red-500/50" />
                             <div className="w-2.5 h-2.5 rounded-full bg-amber-500/50" />
-                            <div className="w-2.5 h-2.5 rounded-full bg-emerald-500/50" />
+                            <div className="w-2.5 h-2.5 rounded-full bg-white/30" />
                          </div>
                          <div className="px-4 py-1 rounded-full bg-white/5 text-[9px] font-bold text-white/30 uppercase tracking-widest border border-white/5">
                             preview.lucid.app

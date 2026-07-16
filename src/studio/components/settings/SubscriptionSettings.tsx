@@ -15,10 +15,10 @@ interface DropdownOption {
 }
 
 const creditOptions: DropdownOption[] = [
-  { credits: '100 credits / month', pricePro: 25, priceBus: 50, desc: '100 monthly credits' },
-  { credits: '500 credits / month', pricePro: 45, priceBus: 85, desc: '500 monthly credits' },
-  { credits: '1200 credits / month', pricePro: 79, priceBus: 140, desc: '1200 monthly credits' },
-  { credits: '2000 credits / month', pricePro: 109, priceBus: 199, desc: '2000 monthly credits' }
+  { credits: '100 Sparks / month', pricePro: 25, priceBus: 50, desc: '100 monthly Sparks' },
+  { credits: '500 Sparks / month', pricePro: 65, priceBus: 90, desc: '500 monthly Sparks' },
+  { credits: '1200 Sparks / month', pricePro: 130, priceBus: 160, desc: '1200 monthly Sparks' },
+  { credits: '2000 Sparks / month', pricePro: 195, priceBus: 230, desc: '2000 monthly Sparks' }
 ];
 
 export const SubscriptionSettings: React.FC<SubscriptionSettingsProps> = ({ userEmail, triggerToast }) => {
@@ -46,7 +46,7 @@ export const SubscriptionSettings: React.FC<SubscriptionSettingsProps> = ({ user
       addNotification(
         'billing',
         'Upgrade Activated',
-        `Processed Paystack sandbox payment. Your standard credit volume is updated to ${amount}.`
+        `Processed Paystack sandbox payment. Your standard Sparks volume is updated to ${amount}.`
       );
     }, 1200);
   };
@@ -54,9 +54,9 @@ export const SubscriptionSettings: React.FC<SubscriptionSettingsProps> = ({ user
   return (
     <div className="flex flex-col gap-8 animate-fadeIn font-body text-zinc-300">
       <div>
-        <h2 className="text-3xl font-heading text-white tracking-tight">Credits & Billing</h2>
+        <h2 className="text-3xl font-heading text-white tracking-tight">Sparks & Billing</h2>
         <p className="text-sm text-zinc-400 mt-1">
-          Monitor your active resource usage, manage credits limit refills, or upgrade plan environments.
+          Monitor your active resource usage, manage Sparks limit refills, or upgrade plan environments.
         </p>
       </div>
 
@@ -64,7 +64,7 @@ export const SubscriptionSettings: React.FC<SubscriptionSettingsProps> = ({ user
         
         {/* Next refill prompt line */}
         <p className="text-xs text-zinc-400 font-sans tracking-wide">
-          Your next package refill of <span className="text-white font-bold">{user.maxCredits} credits</span> will occur on <span className="text-white font-bold underline">July 1, 2026</span>.
+          Your next package refill of <span className="text-white font-bold">{user.maxCredits} Sparks</span> will occur on <span className="text-white font-bold underline">July 1, 2026</span>.
         </p>
 
         {/* Balance Card Grid */}
@@ -77,11 +77,11 @@ export const SubscriptionSettings: React.FC<SubscriptionSettingsProps> = ({ user
             
             <div className="flex flex-col gap-1.5 z-10">
               <span className="text-[10px] font-black tracking-[0.2em] text-white/60 uppercase font-sans">
-                Current Credit Balance
+                Current Sparks Balance
               </span>
               <h3 className="text-4xl font-black text-white tracking-wider flex items-baseline gap-1 mt-1">
                 <span>{user.credits}</span>
-                <span className="text-xs text-zinc-500 font-normal ml-1">credits available</span>
+                <span className="text-xs text-zinc-500 font-normal ml-1">Sparks available</span>
               </h3>
             </div>
 
@@ -94,7 +94,7 @@ export const SubscriptionSettings: React.FC<SubscriptionSettingsProps> = ({ user
                 />
               </div>
               <p className="text-[10px] text-zinc-500 mt-2 font-mono tracking-wide">
-                {user.credits} / {user.maxCredits} monthly credits — Unused credits expire July 1, 2026.
+                {user.credits} / {user.maxCredits} monthly Sparks — Unused Sparks expire July 1, 2026.
               </p>
             </div>
           </div>
@@ -122,7 +122,7 @@ export const SubscriptionSettings: React.FC<SubscriptionSettingsProps> = ({ user
         <div className="p-4 rounded-[1rem] bg-[#0c0c0e]/30 border border-zinc-900 font-sans text-xs text-zinc-400 flex items-center justify-between">
           <div className="flex items-center gap-2 select-none">
             <div className="w-1.5 h-1.5 rounded-full bg-white shadow-[0_0_8px_rgba(255,255,255,0.6)]" />
-            <span>Daily restriction limit: <span className="font-bold text-white">14 / 14 credits</span></span>
+            <span>Daily restriction limit: <span className="font-bold text-white">14 / 14 Sparks</span></span>
           </div>
           <span className="text-[10px] text-zinc-500 font-mono">Resets in 11h 32m</span>
         </div>
@@ -131,7 +131,7 @@ export const SubscriptionSettings: React.FC<SubscriptionSettingsProps> = ({ user
         <div className="flex flex-col items-center gap-5 mt-8 pb-3">
           <div className="text-center">
             <h3 className="text-2xl font-heading text-white tracking-tight">Upgrade Plan Workspace</h3>
-            <p className="text-xs text-zinc-500 mt-1 max-w-md">Scale up your memory workspace and API model credit lines instantaneously.</p>
+            <p className="text-xs text-zinc-500 mt-1 max-w-md">Scale up your memory workspace and API model Spark lines instantaneously.</p>
           </div>
 
           {/* Billing Period Switcher in Lucid Dev style */}
@@ -195,9 +195,9 @@ export const SubscriptionSettings: React.FC<SubscriptionSettingsProps> = ({ user
                   </span>
                 </div>
 
-                {/* Dropdown credits selector */}
+                {/* Dropdown Sparks selector */}
                 <div className="flex flex-col gap-2 relative z-30">
-                  <label className="text-[9px] text-zinc-500 font-bold tracking-widest uppercase">Monthly Package Credits</label>
+                  <label className="text-[9px] text-zinc-500 font-bold tracking-widest uppercase">Monthly Package Sparks</label>
                   <button 
                     onClick={() => {
                       setShowProCreditsMenu(!showProCreditsMenu);
@@ -235,7 +235,7 @@ export const SubscriptionSettings: React.FC<SubscriptionSettingsProps> = ({ user
                 {/* Features list */}
                 <div className="flex flex-col gap-3.5 mt-5">
                   {[
-                    `${selectedProOpt.credits.replace(" / month", " computation credits")}`,
+                    `${selectedProOpt.credits.replace(" Sparks / month", " computation Sparks")}`,
                     'Lucid Spark Compilation Engine',
                     'Vibe Sandbox Live Rendering Core',
                     'Dynamic code-to-theme templates',
@@ -293,9 +293,9 @@ export const SubscriptionSettings: React.FC<SubscriptionSettingsProps> = ({ user
                   </span>
                 </div>
 
-                {/* Dropdown credits selector */}
+                {/* Dropdown Sparks selector */}
                 <div className="flex flex-col gap-2 relative z-30">
-                  <label className="text-[9px] text-zinc-500 font-bold tracking-widest uppercase">Monthly Package Credits</label>
+                  <label className="text-[9px] text-zinc-500 font-bold tracking-widest uppercase">Monthly Package Sparks</label>
                   <button 
                     onClick={() => {
                       setShowBusCreditsMenu(!showBusCreditsMenu);
@@ -333,7 +333,7 @@ export const SubscriptionSettings: React.FC<SubscriptionSettingsProps> = ({ user
                 {/* Features list */}
                 <div className="flex flex-col gap-3.5 mt-5">
                   {[
-                    `${selectedBusOpt.credits.replace(" / month", " computation credits")}`,
+                    `${selectedBusOpt.credits.replace(" Sparks / month", " computation Sparks")}`,
                     'Internal application sandboxed publishing',
                     'Single Sign-On (SSO) secure login',
                     'Consolidated team workspace pipelines',

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, Zap, Plus, Sparkles } from 'lucide-react';
+import { Search, Zap, Plus, Sparkles, ChevronLeft, ChevronRight, GripVertical } from 'lucide-react';
 import { useStudioStore } from '../store/useStudioStore';
 import { IDESidebar } from './ide/IDESidebar';
 import { IDEWorkspace } from './ide/IDEWorkspace';
@@ -16,7 +16,7 @@ export const VibeIDEView: React.FC = () => {
   } = useStudioStore();
 
   // Selected sub-tab / views in the Vibe IDE
-  const [activeTab, setActiveTab] = useState<'ai_editor' | 'visual_editor' | 'branding' | 'files' | 'users' | 'email' | 'audits' | 'commerce' | 'domains' | 'pricing'>('ai_editor');
+  const [activeTab, setActiveTab] = useState<'ai_editor' | 'visual_editor' | 'branding' | 'files' | 'users' | 'email' | 'audits' | 'commerce' | 'domains' | 'pricing' | 'vibe_engine'>('ai_editor');
   
   // Sidebar app dropdown switcher
   const [selectedAppName, setSelectedAppName] = useState('Black & White Launch');
@@ -38,17 +38,79 @@ export const VibeIDEView: React.FC = () => {
   const [previewHeadline, setPreviewHeadline] = useState('Build faster. Ship smarter.');
   const [showFeatureBadge, setShowFeatureBadge] = useState(true);
   const [badgeText, setBadgeText] = useState('NOW IN PUBLIC BETA');
-  const [primaryButtonColor, setPrimaryButtonColor] = useState<'black' | 'emerald' | 'indigo' | 'purple'>('black');
+  const [primaryButtonColor, setPrimaryButtonColor] = useState<'black' | 'violet' | 'indigo' | 'purple'>('black');
   const [showSecondaryCard, setShowSecondaryCard] = useState(false);
   const [activePreviewDevice, setActivePreviewDevice] = useState<'desktop' | 'mobile'>('desktop');
 
-  // Interactive files list
-  const [workspaceFiles] = useState([
+  // Interactive Resizable split-pane & "Roller" Extension controls
+  const [workspaceWidth, setWorkspaceWidth] = useState<number>(400);
+  const [isResizing, setIsResizing] = useState(false);
+  const [isExtended, setIsExtended] = useState(false);
+  const [isHoveringRoller, setIsHoveringRoller] = useState(false);
+
+  useEffect(() => {
+    const handleMove = (clientX: number) => {
+      if (!isResizing) return;
+      // Chatbox is on the left, so its width is equal to the clientX position
+      const newWidth = clientX;
+      if (newWidth >= 250 && newWidth <= 800) {
+        setWorkspaceWidth(newWidth);
+      }
+    };
+
+    const handleMouseMove = (e: MouseEvent) => {
+      handleMove(e.clientX);
+    };
+
+    const handleTouchMove = (e: TouchEvent) => {
+      if (e.touches && e.touches.length > 0) {
+        handleMove(e.touches[0].clientX);
+      }
+    };
+
+    const handleMouseUp = () => {
+      setIsResizing(false);
+    };
+
+    if (isResizing) {
+      window.addEventListener('mousemove', handleMouseMove);
+      window.addEventListener('mouseup', handleMouseUp);
+      window.addEventListener('touchmove', handleTouchMove, { passive: true });
+      window.addEventListener('touchend', handleMouseUp);
+    }
+
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+      window.removeEventListener('touchmove', handleTouchMove);
+      window.removeEventListener('touchend', handleMouseUp);
+    };
+  }, [isResizing]);
+
+  // Dynamic app builder type for vibe coding preview (like bolt.new or lovable)
+  const [generatedAppType, setGeneratedAppType] = useState<'landing_page' | 'calculator' | 'todo' | 'weather' | 'pomodoro' | 'budget' | 'ai_chat'>('landing_page');
+
+  const getFileName = (appType: 'landing_page' | 'calculator' | 'todo' | 'weather' | 'pomodoro' | 'budget' | 'ai_chat') => {
+    switch (appType) {
+      case 'calculator': return 'Calculator.tsx';
+      case 'todo': return 'TodoBoard.tsx';
+      case 'weather': return 'WeatherWidget.tsx';
+      case 'pomodoro': return 'FocusTimer.tsx';
+      case 'budget': return 'BudgetTracker.tsx';
+      case 'ai_chat': return 'AIChatbot.tsx';
+      default: return 'LandingPage.tsx';
+    }
+  };
+
+  const activeFileName = getFileName(generatedAppType);
+
+  // Interactive dynamic files list based on the vibe-compiled app
+  const workspaceFiles = [
     { name: 'App.tsx', size: '2.4kb', modified: '2 mins ago' },
-    { name: 'index.html', size: '1.1kb', modified: '1 day ago' },
-    { name: 'LandingPage.tsx', size: '8.7kb', modified: 'Just now' },
+    { name: activeFileName, size: '12.4kb', modified: 'Just now' },
+    { name: 'package.json', size: '1.1kb', modified: '1 day ago' },
     { name: 'global.css', size: '4.2kb', modified: '3 hours ago' }
-  ]);
+  ];
 
   // Play chime helper
   const playChime = () => {
@@ -78,66 +140,92 @@ export const VibeIDEView: React.FC = () => {
 
       const promptLower = text.toLowerCase();
       let feedbackText = "Vibe changes successfully compiled into the sandbox container!";
+      
+      let detectedAppType: 'landing_page' | 'calculator' | 'todo' | 'weather' | 'pomodoro' | 'budget' | 'ai_chat' | null = null;
 
-      if (promptLower.includes('dark') || promptLower.includes('night')) {
-        setPreviewTheme('dark');
-        feedbackText = "Applied a responsive minimal dark theme to the landing page layout with full contrast.";
-      } else if (promptLower.includes('cosmic') || promptLower.includes('purple') || promptLower.includes('galaxy')) {
-        setPreviewTheme('cosmic');
-        feedbackText = "Woven a celestial vibe into the website preview complete with a purple starry accent gradient.";
-      } else if (promptLower.includes('light') || promptLower.includes('white')) {
-        setPreviewTheme('light');
-        feedbackText = "Reset preview workspace to our signature clean daylight layout.";
-      } else if (promptLower.includes('glass') || promptLower.includes('frosted')) {
-        setPreviewTheme('glass');
-        feedbackText = "Infused dynamic .liquid-glass backdrop-blur backdrops to preview cards.";
+      // Determine which high-fidelity app code they want to compile (like bolt.new / lovable)
+      if (promptLower.includes('calculator') || promptLower.includes('calc') || promptLower.includes('math') || promptLower.includes('arithmetic')) {
+        detectedAppType = 'calculator';
+      } else if (promptLower.includes('todo') || promptLower.includes('task') || promptLower.includes('list') || promptLower.includes('kanban') || promptLower.includes('checklist')) {
+        detectedAppType = 'todo';
+      } else if (promptLower.includes('weather') || promptLower.includes('forecast') || promptLower.includes('rain') || promptLower.includes('sunny') || promptLower.includes('temperature')) {
+        detectedAppType = 'weather';
+      } else if (promptLower.includes('pomodoro') || promptLower.includes('timer') || promptLower.includes('clock') || promptLower.includes('countdown')) {
+        detectedAppType = 'pomodoro';
+      } else if (promptLower.includes('budget') || promptLower.includes('finance') || promptLower.includes('expense') || promptLower.includes('transaction') || promptLower.includes('money')) {
+        detectedAppType = 'budget';
+      } else if (promptLower.includes('assistant') || promptLower.includes('bot') || promptLower.includes('gpt') || promptLower.includes('ai chat') || (promptLower.includes('ai') && promptLower.includes('chat'))) {
+        detectedAppType = 'ai_chat';
+      } else if (promptLower.includes('landing') || promptLower.includes('website') || promptLower.includes('apex') || promptLower.includes('marketing')) {
+        detectedAppType = 'landing_page';
       }
 
-      if (promptLower.includes('headline') || promptLower.includes('title') || promptLower.includes('change text')) {
-        const words = text.split(" ");
-        const index = words.findIndex(w => w.toLowerCase().includes('headline') || w.toLowerCase().includes('title'));
-        if (index !== -1 && index + 1 < words.length) {
-          const matched = words.slice(index + 1).join(" ").replace(/['"]+/g, '');
-          if (matched.trim().length > 3) {
-            setPreviewHeadline(matched);
-            feedbackText += ` Updated landing page main display heading to "${matched}".`;
+      if (detectedAppType) {
+        setGeneratedAppType(detectedAppType);
+        const codeFile = getFileName(detectedAppType);
+        feedbackText = `Successfully analyzed prompt intents, generated React + Tailwind source, and compiled fully functional interactive ${detectedAppType.replace('_', ' ')} components inside **${codeFile}**! Hot reloading complete.`;
+      } else {
+        // Apply micro-style modifications if they are customizing the existing theme/elements
+        if (promptLower.includes('dark') || promptLower.includes('night')) {
+          setPreviewTheme('dark');
+          feedbackText = "Applied a responsive minimal dark theme with full contrast.";
+        } else if (promptLower.includes('cosmic') || promptLower.includes('purple') || promptLower.includes('galaxy')) {
+          setPreviewTheme('cosmic');
+          feedbackText = "Woven a celestial vibe into the preview complete with a purple starry accent gradient.";
+        } else if (promptLower.includes('light') || promptLower.includes('white')) {
+          setPreviewTheme('light');
+          feedbackText = "Reset preview workspace to our signature clean daylight layout.";
+        } else if (promptLower.includes('glass') || promptLower.includes('frosted')) {
+          setPreviewTheme('glass');
+          feedbackText = "Infused dynamic .liquid-glass backdrop-blur backdrops to layout cards.";
+        }
+
+        if (promptLower.includes('headline') || promptLower.includes('title') || promptLower.includes('change text')) {
+          const words = text.split(" ");
+          const index = words.findIndex(w => w.toLowerCase().includes('headline') || w.toLowerCase().includes('title'));
+          if (index !== -1 && index + 1 < words.length) {
+            const matched = words.slice(index + 1).join(" ").replace(/['"]+/g, '');
+            if (matched.trim().length > 3) {
+              setPreviewHeadline(matched);
+              feedbackText += ` Updated the primary headline view to "${matched}".`;
+            }
+          } else {
+            setPreviewHeadline("Design with code. Build with light.");
+            feedbackText += " Set headline banner to standard alternative mockup mode.";
           }
-        } else {
-          setPreviewHeadline("Design with code. Build with light.");
-          feedbackText += " Set headline banner to standard alternative mockup mode.";
         }
-      }
 
-      if (promptLower.includes('badge') || promptLower.includes('pill')) {
-        if (promptLower.includes('hide') || promptLower.includes('remove')) {
-          setShowFeatureBadge(false);
-          feedbackText += " Hidden the public beta announcement badge capsule.";
-        } else {
-          setShowFeatureBadge(true);
-          const customBadge = text.match(/"([^"]+)"/);
-          if (customBadge && customBadge[1]) {
-            setBadgeText(customBadge[1]);
+        if (promptLower.includes('badge') || promptLower.includes('pill')) {
+          if (promptLower.includes('hide') || promptLower.includes('remove')) {
+            setShowFeatureBadge(false);
+            feedbackText += " Hidden the active promotional badge capsule.";
+          } else {
+            setShowFeatureBadge(true);
+            const customBadge = text.match(/"([^"]+)"/);
+            if (customBadge && customBadge[1]) {
+              setBadgeText(customBadge[1]);
+            }
+            feedbackText += " Enabled and updated notification badge layout.";
           }
-          feedbackText += " Enabled and updated notification badge layout.";
         }
-      }
 
-      if (promptLower.includes('button') || promptLower.includes('cta')) {
-        if (promptLower.includes('green') || promptLower.includes('emerald')) {
-          setPrimaryButtonColor('emerald');
-        } else if (promptLower.includes('indigo') || promptLower.includes('blue')) {
-          setPrimaryButtonColor('indigo');
-        } else if (promptLower.includes('purple')) {
-          setPrimaryButtonColor('purple');
-        } else {
-          setPrimaryButtonColor('black');
+        if (promptLower.includes('button') || promptLower.includes('cta')) {
+          if (promptLower.includes('green') || promptLower.includes('emerald') || promptLower.includes('violet')) {
+            setPrimaryButtonColor('violet');
+          } else if (promptLower.includes('indigo') || promptLower.includes('blue')) {
+            setPrimaryButtonColor('indigo');
+          } else if (promptLower.includes('purple')) {
+            setPrimaryButtonColor('purple');
+          } else {
+            setPrimaryButtonColor('black');
+          }
+          feedbackText += " Re-configured primary CTA button visual accent.";
         }
-        feedbackText += " Re-configured primary CTA button visual weight and accent glow.";
-      }
 
-      if (promptLower.includes('card') || promptLower.includes('feature') || promptLower.includes('grid')) {
-        setShowSecondaryCard(true);
-        feedbackText += " Synthesized an extra secondary live stats card to preview bento grid.";
+        if (promptLower.includes('card') || promptLower.includes('feature') || promptLower.includes('grid')) {
+          setShowSecondaryCard(true);
+          feedbackText += " Synthesized an extra secondary stats card layout.";
+        }
       }
 
       setMessages(prev => [...prev, {
@@ -167,11 +255,28 @@ export const VibeIDEView: React.FC = () => {
       {/* NEW PREMIUM LUCID TOP BAR NAVBAR */}
       <header className="relative z-10 w-full h-14 bg-[#07080c]/85 backdrop-blur-md border-b border-white/[0.04] flex items-center justify-between px-4 select-none">
         
-        {/* Left Section: Sidebar Toggle & App Name */}
+        {/* Left Section: Logo & App Name */}
         <div className="flex items-center gap-3">
-          {/* Custom Sidebar Toggle Button resembling the screenshot exactly */}
+          {/* Back to Dashboard Button */}
           <button 
-            onClick={() => alert("Sidebar view customized")}
+            onClick={() => setCurrentView('chat')}
+            className="flex items-center gap-1.5 text-[11px] font-semibold tracking-wider uppercase text-zinc-400 hover:text-white transition-colors mr-1 cursor-pointer border-r border-white/10 pr-3"
+          >
+            <ChevronLeft className="w-4 h-4" />
+            <span>Dashboard</span>
+          </button>
+          
+          {/* Custom lucid.dev Logo styled elegantly following the design guidelines */}
+          <div className="flex items-center gap-2 mr-1 border-r border-white/10 pr-3">
+            <div className="w-7 h-7 rounded-full bg-white/10 border border-white/10 text-white flex items-center justify-center font-heading text-xs italic">
+              l
+            </div>
+            <span className="font-heading text-base italic text-white tracking-wider select-none">lucid.dev</span>
+          </div>
+
+          {/* Custom Toggle Button resembling the screenshot exactly */}
+          <button 
+            onClick={() => alert("Workspace view customized")}
             className="w-8 h-8 rounded-lg hover:bg-white/5 border border-white/[0.04] bg-white/[0.01] flex items-center justify-center transition-all cursor-pointer group focus:outline-none"
             title="Toggle workspace layout"
           >
@@ -200,7 +305,7 @@ export const VibeIDEView: React.FC = () => {
           </div>
         </div>
 
-        {/* Right Section: Credits Zap chip + UPGRADE button + User avatar */}
+        {/* Right Section: Sparks Zap chip + UPGRADE button + User avatar */}
         <div className="flex items-center gap-3">
           
           {/* Sparkly UPGRADE Button in top bar */}
@@ -212,13 +317,13 @@ export const VibeIDEView: React.FC = () => {
             <span>UPGRADE</span>
           </button>
 
-          {/* Credits zap chip - Pill styled, glowing purple/blue border */}
+          {/* Sparks zap chip - Pill styled, glowing purple/blue border */}
           <div className="flex items-center gap-1.5 px-3 py-1 bg-[#1a1c35]/35 hover:bg-[#1a1c35]/50 border border-[#6366f1]/25 rounded-full transition-all duration-300 shadow-[0_2px_12px_rgba(99,102,241,0.05)]">
             <Zap className="w-3.5 h-3.5 text-indigo-400 fill-indigo-400/20 animate-pulse" />
             <span className="text-[11px] font-bold text-indigo-300 font-mono tracking-tight">{user.credits}.0</span>
           </div>
 
-          {/* User Profile Avatar with custom green haired character image / placeholder */}
+          {/* User Profile Avatar with custom character image */}
           <div className="relative w-8 h-8 rounded-full overflow-hidden border border-white/[0.08] shadow-[0_2px_8px_rgba(0,0,0,0.5)] cursor-pointer hover:border-white/20 transition-all flex items-center justify-center bg-zinc-950">
             <img 
               src="https://images.unsplash.com/photo-1560169897-fc0cdbdfa4d5?w=80&h=80&fit=crop" 
@@ -227,7 +332,7 @@ export const VibeIDEView: React.FC = () => {
               className="w-full h-full object-cover"
             />
             {/* Small active dot indicator */}
-            <div className="absolute bottom-0 right-0 w-2 h-2 rounded-full bg-emerald-500 border border-[#07080c]" />
+            <div className="absolute bottom-0 right-0 w-2 h-2 rounded-full bg-indigo-500 border border-[#07080c]" />
           </div>
 
         </div>
@@ -237,17 +342,7 @@ export const VibeIDEView: React.FC = () => {
       {/* MAIN CONTENT SPLIT */}
       <div className="flex-1 flex overflow-hidden w-full relative z-10">
         
-        {/* LEFT SIDEBAR PANEL */}
-        <IDESidebar
-          activeTab={activeTab}
-          setActiveTab={setActiveTab}
-          selectedAppName={selectedAppName}
-          setSelectedAppName={setSelectedAppName}
-          showAppSelector={showAppSelector}
-          setShowAppSelector={setShowAppSelector}
-        />
-
-        {/* CENTER WORKSPACE PANEL */}
+        {/* LEFT WORKSPACE PANEL */}
         <IDEWorkspace
           activeTab={activeTab}
           setActiveTab={setActiveTab}
@@ -263,24 +358,89 @@ export const VibeIDEView: React.FC = () => {
           setShowSecondaryCard={setShowSecondaryCard}
           previewTheme={previewTheme}
           setPreviewTheme={setPreviewTheme}
-          primaryButtonColor={primaryButtonColor}
-          setPrimaryButtonColor={setPrimaryButtonColor}
+          primaryButtonColor={primaryButtonColor as any}
+          setPrimaryButtonColor={setPrimaryButtonColor as any}
           workspaceFiles={workspaceFiles}
           playChime={playChime}
+          generatedAppType={generatedAppType}
+          setGeneratedAppType={setGeneratedAppType}
+          width={workspaceWidth}
+          isExtended={isExtended}
         />
 
-        {/* RIGHT PREVIEW PANEL */}
-        <IDEPreview
-          activePreviewDevice={activePreviewDevice}
-          setActivePreviewDevice={setActivePreviewDevice}
-          previewTheme={previewTheme}
-          previewHeadline={previewHeadline}
-          showFeatureBadge={showFeatureBadge}
-          badgeText={badgeText}
-          primaryButtonColor={primaryButtonColor}
-          showSecondaryCard={showSecondaryCard}
-          playChime={playChime}
-        />
+        {/* THE DIVIDER LINE (RESIZE HANDLE / SPLITTER) */}
+        <div 
+          onMouseEnter={() => setIsHoveringRoller(true)}
+          onMouseLeave={() => setIsHoveringRoller(false)}
+          onMouseDown={(e) => {
+            e.preventDefault();
+            setIsResizing(true);
+          }}
+          onTouchStart={(e) => {
+            e.stopPropagation();
+            setIsResizing(true);
+          }}
+          className={`relative w-2 h-full flex items-center justify-center cursor-col-resize select-none z-40 transition-all duration-300 ${
+            isResizing 
+              ? 'bg-violet-600/30 border-l-2 border-r-2 border-violet-500 shadow-[0_0_30px_rgba(139,92,246,0.7)]' 
+              : isHoveringRoller 
+                ? 'bg-violet-600/10 border-l border-r border-violet-500/35 shadow-[0_0_15px_rgba(139,92,246,0.4)]' 
+                : 'bg-[#060608] border-l border-r border-white/[0.02]'
+          }`}
+        >
+          {/* Electric Violet Handle Line */}
+          <div className={`w-[2px] h-full transition-all duration-300 ${
+            isResizing 
+              ? 'bg-violet-400 shadow-[0_0_15px_#8b5cf6]' 
+              : isHoveringRoller 
+                ? 'bg-violet-500/70 shadow-[0_0_8px_rgba(139,92,246,0.5)]' 
+                : 'bg-white/[0.04]'
+          }`} />
+
+          {/* Floating Pill Extension Badge close to the roller cursor */}
+          {(isHoveringRoller || isResizing || isExtended) && (
+            <div 
+              onMouseDown={(e) => e.stopPropagation()} // Prevent initiating resizing drag when clicking button!
+              onTouchStart={(e) => e.stopPropagation()}
+              className="absolute pointer-events-auto flex items-center gap-1 p-1 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white rounded-full shadow-[0_4px_24px_rgba(0,0,0,0.8)] z-50 transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer border border-white/10"
+              title={isExtended ? "Restore split layout" : "Extend Chatbox over Preview"}
+              style={{ top: '50%', transform: 'translateY(-50%)' }}
+            >
+              <button 
+                onClick={() => setIsExtended(!isExtended)}
+                className="flex items-center gap-1 px-3 py-1 text-[10px] font-extrabold uppercase tracking-wider font-sans border-none bg-transparent cursor-pointer select-none text-white"
+              >
+                {isExtended ? (
+                  <>
+                     <ChevronLeft className="w-3.5 h-3.5 text-white stroke-[3]" />
+                    <span>Split View</span>
+                  </>
+                ) : (
+                  <>
+                    <ChevronRight className="w-3.5 h-3.5 text-white stroke-[3]" />
+                    <span>Extend Chat</span>
+                  </>
+                )}
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* RIGHT LIVE RENDERING VIBE SANDBOX PREVIEW SECTION */}
+        {!isExtended && (
+          <IDEPreview
+            activePreviewDevice={activePreviewDevice}
+            setActivePreviewDevice={setActivePreviewDevice}
+            previewTheme={previewTheme}
+            previewHeadline={previewHeadline}
+            showFeatureBadge={showFeatureBadge}
+            badgeText={badgeText}
+            primaryButtonColor={primaryButtonColor as any}
+            showSecondaryCard={showSecondaryCard}
+            playChime={playChime}
+            generatedAppType={generatedAppType}
+          />
+        )}
 
       </div>
 
