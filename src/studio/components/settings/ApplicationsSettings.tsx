@@ -6,7 +6,7 @@ interface ApplicationsSettingsProps {
 }
 
 export const ApplicationsSettings: React.FC<ApplicationsSettingsProps> = ({ triggerToast }) => {
-  const [supabaseConnected, setSupabaseConnected] = useState(false);
+  const [firebaseConnected, setFirebaseConnected] = useState(true);
   const [netlifyConnected, setNetlifyConnected] = useState(false);
   const [figmaConnected, setFigmaConnected] = useState(true);
 
@@ -21,37 +21,37 @@ export const ApplicationsSettings: React.FC<ApplicationsSettingsProps> = ({ trig
 
       <div className="flex flex-col gap-5 border-t border-zinc-900 pt-6">
         
-        {/* Database - Supabase */}
+        {/* Database - Firebase */}
         <div className="p-5 bg-zinc-950/20 border border-zinc-900 rounded-[1.5rem] flex flex-col sm:flex-row sm:items-center justify-between gap-5 hover:border-zinc-800 transition-all group relative overflow-hidden">
-          <div className="absolute right-0 top-0 w-32 h-32 bg-emerald-500/[0.01] blur-2xl rounded-full" />
+          <div className="absolute right-0 top-0 w-32 h-32 bg-amber-500/[0.01] blur-2xl rounded-full" />
           <div className="flex items-start gap-4">
-            <div className="w-11 h-11 rounded-xl bg-teal-950/20 border border-teal-900/30 flex items-center justify-center font-bold text-teal-400">
-              <Database className="w-5 h-5 text-teal-400 group-hover:scale-110 transition-transform" />
+            <div className="w-11 h-11 rounded-xl bg-amber-950/20 border border-amber-900/30 flex items-center justify-center font-bold text-amber-400">
+              <Database className="w-5 h-5 text-amber-400 group-hover:scale-110 transition-transform" />
             </div>
             <div className="flex flex-col gap-0.5">
               <div className="flex items-center gap-2">
                 <span className="text-sm font-bold text-white tracking-wide">Database Link</span>
-                <span className="text-xs text-[#3ecf8e] font-heading font-normal">Supabase</span>
+                <span className="text-xs text-[#f5820d] font-heading font-normal">Firebase</span>
               </div>
               <p className="text-xs text-zinc-500 leading-relaxed font-sans max-w-xl">
-                Link dynamic tables and user database schemas to enable persistent production user logins and secure tables with row level security (RLS).
+                Link dynamic documents and collections in Cloud Firestore to enable persistent user state synchronization, high fidelity transactions ledger logs, and secure database structures.
               </p>
             </div>
           </div>
 
           <button
             onClick={() => {
-              setSupabaseConnected(!supabaseConnected);
-              triggerToast(supabaseConnected ? "Supabase engine decoupled from compiler" : "Establishing connection pipelines to Supabase schema...");
+              setFirebaseConnected(!firebaseConnected);
+              triggerToast(firebaseConnected ? "Firebase compilation connection suspended" : "Establishing connection pipelines to Firebase collections...");
             }}
             className={`px-5 py-2 rounded-full text-xs font-bold tracking-wide transition-all focus:outline-none cursor-pointer
-              ${supabaseConnected 
+              ${firebaseConnected 
                 ? 'bg-zinc-900 hover:bg-zinc-850 text-zinc-400 border border-zinc-800' 
                 : 'bg-white hover:bg-zinc-100 text-black shadow-[0_0_20px_rgba(255,255,255,0.08)]'
               }
             `}
           >
-            {supabaseConnected ? 'Disconnect' : 'Connect'}
+            {firebaseConnected ? 'Disconnect' : 'Connect'}
           </button>
         </div>
 

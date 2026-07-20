@@ -27,12 +27,18 @@ import {
 
 import { useStudioStore } from '../store/useStudioStore';
 
-export const AIPanel: React.FC = () => {
+import { auth } from '../../lib/firebase/client';
+
+export interface AIPanelProps {
+  isLoading?: boolean;
+}
+
+export const AIPanel: React.FC<AIPanelProps> = ({ isLoading = false }) => {
   const { addNotification, glowFeatureEnabled, finishSoundEnabled, setCurrentView } = useStudioStore();
   const [inputValue, setInputValue] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [planMode, setPlanMode] = useState(false);
-  const [selectedModel, setSelectedModel] = useState('Standard');
+  const [selectedModel, setSelectedModel] = useState('Gemini 3.1 Flash-Lite');
   const [activeDropdown, setActiveDropdown] = useState<'model' | null>(null);
 
   // Voice recording simulation states
@@ -73,6 +79,18 @@ export const AIPanel: React.FC = () => {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const recognitionRef = useRef<any>(null);
+
+  // Stop recognition on unmount
+  useEffect(() => {
+    return () => {
+      if (recognitionRef.current) {
+        try {
+          recognitionRef.current.stop();
+        } catch (e) {}
+      }
+    };
+  }, []);
 
   // Handle outside click to close dropdowns
   useEffect(() => {
@@ -116,12 +134,81 @@ export const AIPanel: React.FC = () => {
   };
 
   const handleToggleRecording = () => {
+    const SpeechRecognitionAPI = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+
     if (isRecording) {
+      if (recognitionRef.current) {
+        try {
+          recognitionRef.current.stop();
+        } catch (e) {
+          console.warn('Error stopping speech recognition:', e);
+        }
+      }
       setIsRecording(false);
-      showToast("Voice recording finished");
+      showToast("Voice guidelines recording stopped.");
     } else {
-      setIsRecording(true);
-      showToast("Listening... Speak your prompt guidelines now.");
+      if (!SpeechRecognitionAPI) {
+        // Fallback simulation if SpeechRecognition is not supported
+        setIsRecording(true);
+        showToast("Speech Recognition API not supported. Simulating...");
+        return;
+      }
+
+      try {
+        const recognition = new SpeechRecognitionAPI();
+        recognition.continuous = true;
+        recognition.interimResults = true;
+        recognition.lang = 'en-US';
+
+        let startValue = inputValue;
+
+        recognition.onstart = () => {
+          setIsRecording(true);
+          showToast("Listening... Speak your prompt guidelines now.");
+        };
+
+        recognition.onresult = (event: any) => {
+          let interimTranscript = '';
+          let finalTranscript = '';
+
+          for (let i = event.resultIndex; i < event.results.length; ++i) {
+            if (event.results[i].isFinal) {
+              finalTranscript += event.results[i][0].transcript;
+            } else {
+              interimTranscript += event.results[i][0].transcript;
+            }
+          }
+
+          const speechText = finalTranscript || interimTranscript;
+          if (speechText) {
+            setInputValue((startValue ? startValue.trim() + " " : "") + speechText);
+          }
+        };
+
+        recognition.onerror = (event: any) => {
+          console.error('Speech recognition error:', event.error);
+          let userMessage = `Voice entry error: ${event.error || 'unknown'}`;
+          if (event.error === 'not-allowed') {
+            userMessage = 'Microphone access is blocked. Please allow microphone permissions in your browser or click on the browser address bar icon to unblock.';
+          } else if (event.error === 'service-not-allowed') {
+            userMessage = 'Speech recognition service is not allowed by your browser or network.';
+          }
+          showToast(userMessage);
+          setIsRecording(false);
+        };
+
+        recognition.onend = () => {
+          setIsRecording(false);
+        };
+
+        recognitionRef.current = recognition;
+        recognition.start();
+
+      } catch (err: any) {
+        console.error("SpeechRecognition initialization failed:", err);
+        setIsRecording(true);
+        showToast("Speech Recognition failed. Simulating...");
+      }
     }
   };
 
@@ -154,7 +241,7 @@ export const AIPanel: React.FC = () => {
     // Sound disabled by user request
   };
 
-  const handleSend = () => {
+  const handleSend = async () => {
     const textToSend = inputValue.trim();
     if (!textToSend && attachedFiles.length === 0) {
       showToast("Please enter a vibe prompt or drop file attachments.");
@@ -163,7 +250,45 @@ export const AIPanel: React.FC = () => {
 
     setIsGenerating(true);
 
-    setTimeout(() => {
+    // Determine task type based on selection and attachments
+    let taskType = "STANDARD_UI";
+    if (selectedModel === "Gemini 3.5 Flash") {
+      taskType = "COMPONENT_CREATION";
+    } else if (selectedModel === "Gemini 3.1 Pro Preview") {
+      taskType = "COMPLEX_ENGINEERING";
+    }
+
+    if (attachedFiles.some(f => f.type === 'screenshot')) {
+      taskType = "PIXEL_EXTRACTION";
+    } else if (isRecording) {
+      taskType = "VOICE_TRANSCRIPTION";
+    }
+
+    try {
+      // Setup mock base64 assets for interactive multimodal processing
+      const imageBase64 = attachedFiles.some(f => f.type === 'screenshot') 
+        ? "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==" 
+        : undefined;
+
+      const response = await fetch("/api/ai/generate", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          userId: auth.currentUser?.uid || "u1", // use actual current user or mock user id
+          prompt: textToSend || "Refine active UI container layouts and apply Barlow typography.",
+          taskType,
+          imageBase64
+        })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Server compilation failed.");
+      }
+
       setIsGenerating(false);
       setInputValue("");
       setAttachedFiles([]);
@@ -172,16 +297,20 @@ export const AIPanel: React.FC = () => {
         playFinishChime();
       }
       
-      // Dispatch real user event notification
+      // Dispatch real user event notification with detailed transaction ledger outcomes
       addNotification(
         'ai', 
-        'AI Generation Finished', 
-        `Successfully synthesized high fidelity CSS glass modules for: "${textToSend || 'Workspace layout structure'}"`
+        'Spark Compilation Success', 
+        `Compiled via ${data.modelUsed}. Charged ${data.sparksCharged} Spark credit(s).`
       );
 
       // Transition to the interactive Vibe Coding IDE workspace
       setCurrentView('vibe');
-    }, 2400);
+    } catch (err) {
+      setIsGenerating(false);
+      showToast((err as Error).message);
+      addNotification('error', 'Compilation Error', (err as Error).message);
+    }
   };
 
   // Plus Dropdown Upload Handlers
@@ -218,6 +347,41 @@ export const AIPanel: React.FC = () => {
   const removeAttachedFile = (id: string) => {
     setAttachedFiles(prev => prev.filter(f => f.id !== id));
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center gap-6 w-full max-w-[850px] px-4 relative animate-pulse select-none">
+        {/* Skeleton Header */}
+        <div className="text-center mt-4 mb-2 flex flex-col items-center">
+          <div className="h-10 w-64 bg-white/5 rounded-full mb-3" />
+          <div className="h-4 w-96 bg-white/5 rounded-full" />
+        </div>
+
+        {/* Skeleton Chatbox */}
+        <div className="w-full h-44 bg-white/[0.02] border border-white/5 rounded-[24px] p-6 flex flex-col justify-between">
+          <div className="flex flex-col gap-3.5">
+            <div className="h-4 w-2/3 bg-white/5 rounded-full" />
+            <div className="h-4 w-1/2 bg-white/5 rounded-full" />
+          </div>
+          <div className="flex items-center justify-between border-t border-white/5 pt-4">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-full bg-white/5" />
+              <div className="w-20 h-5 rounded-full bg-white/5" />
+            </div>
+            <div className="w-8 h-8 rounded-full bg-white/5" />
+          </div>
+        </div>
+
+        {/* Skeleton Vibe Ideas Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4.5 w-full mt-4">
+          <div className="h-14 bg-white/[0.01] border border-white/5 rounded-[20px]" />
+          <div className="h-14 bg-white/[0.01] border border-white/5 rounded-[20px]" />
+          <div className="h-14 bg-white/[0.01] border border-white/5 rounded-[20px]" />
+          <div className="h-14 bg-white/[0.01] border border-white/5 rounded-[20px]" />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col items-center gap-6 w-full max-w-[850px] px-4 relative">
@@ -549,7 +713,7 @@ export const AIPanel: React.FC = () => {
                       animate={{ opacity: 1, y: 0 }}
                       className="absolute left-0 bottom-full mb-2 w-48 bg-zinc-950 border border-zinc-850 rounded-xl p-1.5 shadow-2xl z-50 backdrop-blur-xl"
                     >
-                      {['Standard', 'Hyper Engine', 'Lucid Turbo', 'Low Latency'].map((model) => (
+                      {['Gemini 3.1 Flash-Lite', 'Gemini 3.5 Flash', 'Gemini 3.1 Pro Preview'].map((model) => (
                         <button
                           key={model}
                           onClick={() => {

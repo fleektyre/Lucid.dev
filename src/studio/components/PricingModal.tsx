@@ -55,7 +55,7 @@ const GlowCard = ({ children, gradient, popular, className = "" }: any) => (
 );
 
 export const PricingModal: React.FC<PricingModalProps> = ({ isOpen, onClose }) => {
-  const { setPackageCredits, addNotification } = useStudioStore();
+  const { setPackageCredits, setPlan, addNotification } = useStudioStore();
 
   // Local card state for Annual billing toggling (as seen in Lovable screenshot)
   const [proAnnual, setProAnnual] = useState(false);
@@ -273,6 +273,7 @@ export const PricingModal: React.FC<PricingModalProps> = ({ isOpen, onClose }) =
                   onClick={() => {
                     const amount = parseInt(selectedProOpt.credits.replace(/[^0-9]/g, ''), 10) || 500;
                     setPackageCredits(amount);
+                    setPlan('Pro');
                     addNotification(
                       'billing',
                       'Subscription Refill Confirmed',
@@ -390,6 +391,7 @@ export const PricingModal: React.FC<PricingModalProps> = ({ isOpen, onClose }) =
                   onClick={() => {
                     const amount = parseInt(selectedBusOpt.credits.replace(/[^0-9]/g, ''), 10) || 2000;
                     setPackageCredits(amount);
+                    setPlan('Business');
                     addNotification(
                       'billing',
                       'Subscription Refill Confirmed',

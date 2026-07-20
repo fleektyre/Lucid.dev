@@ -1,0 +1,69 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "A registered user on the platform.",
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string",
+          "description": "User's email address."
+        },
+        "fullName": {
+          "type": "string",
+          "description": "User's full name."
+        },
+        "updatedAt": {
+          "type": "timestamp"
+        },
+        "google_access_token": {
+          "type": "string"
+        },
+        "google_user_email": {
+          "type": "string"
+        }
+      }
+    },
+    "Collaborator": {
+      "title": "Collaborator",
+      "description": "A project collaborator or invitee",
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string",
+          "description": "Invited collaborator's email"
+        },
+        "role": {
+          "type": "string",
+          "enum": ["Editor", "Viewer", "No access"],
+          "description": "Collaborator access role"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["Pending", "Accepted"],
+          "description": "Invitation status"
+        },
+        "invitedBy": {
+          "type": "string",
+          "description": "Email of the inviter"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp of invitation creation"
+        }
+      },
+      "required": ["email", "role", "status", "invitedBy", "createdAt"]
+    }
+  },
+  "firestore": {
+    "users/{userId}": {
+      "schema": "User",
+      "description": "Stores user profiles."
+    },
+    "/projects/{projectId}/collaborators/{collaboratorId}": {
+      "schema": "Collaborator",
+      "description": "Collection of collaborators invited to a specific project"
+    }
+  }
+}

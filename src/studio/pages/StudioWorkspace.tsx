@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { doc, getDocFromServer } from 'firebase/firestore';
+import { signInAnonymously } from 'firebase/auth';
+import { db, auth } from '../../lib/firebase/client';
 import { StudioBackground } from '../components/StudioBackground';
 import { CelestialHorizon } from '../components/CelestialHorizon';
 import { Sidebar } from '../layout/Sidebar';
@@ -11,6 +14,7 @@ import { SettingsModal } from '../components/SettingsModal';
 import { useStudioStore } from '../store/useStudioStore';
 import { PricingModal } from '../components/PricingModal';
 import { OnboardingModal } from '../components/OnboardingModal';
+import { CreateAppModal } from '../components/CreateAppModal';
 
 const StudioWorkspace: React.FC = () => {
   const { 
@@ -21,10 +25,43 @@ const StudioWorkspace: React.FC = () => {
     setShowOnboardingModal, 
     showSettingsModal,
     setShowSettingsModal,
+    showCreateAppModal,
+    setShowCreateAppModal,
     currentView 
   } = useStudioStore();
 
   const [isMd, setIsMd] = useState(typeof window !== 'undefined' ? window.innerWidth >= 768 : true);
+  const [isFirebaseLoading, setIsFirebaseLoading] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    
+    // Listen to the auth state change to wait for Firebase to restore the session in the background
+    const unsubscribe = auth.onAuthStateChanged(async (user) => {
+      if (!active) return;
+      
+      const startTime = Date.now();
+      try {
+        if (!user) {
+          // If no user session is found, sign in anonymously as fallback
+          await signInAnonymously(auth);
+        }
+      } catch (error) {
+        if (error instanceof Error && error.message.includes('the client is offline')) {
+          console.warn("Firebase connection warning (client offline): Please check your Firebase configuration or network connectivity.");
+        }
+      } finally {
+        if (active) {
+          setIsFirebaseLoading(false);
+        }
+      }
+    });
+
+    return () => {
+      active = false;
+      unsubscribe();
+    };
+  }, []);
 
   useEffect(() => {
     const handleResize = () => {
@@ -46,7 +83,7 @@ const StudioWorkspace: React.FC = () => {
 
   // Direct fullscreen override for the interactive Vibe IDE workspace
   if (currentView === 'vibe') {
-    return <VibeIDEView />;
+    return <VibeIDEView isLoading={isFirebaseLoading} />;
   }
 
   return (
@@ -55,8 +92,8 @@ const StudioWorkspace: React.FC = () => {
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[120%] h-[350px] rounded-full bg-[radial-gradient(circle_at_center,rgba(14,165,233,0.08)_0%,transparent_70%)] blur-[80px] pointer-events-none z-0" />
 
       {/* Floating Layout Layer */}
-      <Sidebar />
-      <TopNav />
+      <Sidebar isLoading={isFirebaseLoading} />
+      <TopNav isLoading={isFirebaseLoading} />
       
       {/* Decorative Overlays */}
       <div className="fixed inset-0 pointer-events-none z-0">
@@ -78,7 +115,11 @@ const StudioWorkspace: React.FC = () => {
           
           {/* Centralized AI chat primary interface */}
           <div className="relative z-10 w-full flex flex-col items-center">
-            {currentView === 'all_apps' ? <AllAppsView /> : <AIPanel />}
+            {currentView === 'all_apps' ? (
+              <AllAppsView isLoading={isFirebaseLoading} />
+            ) : (
+              <AIPanel isLoading={isFirebaseLoading} />
+            )}
           </div>
         </div>
       </motion.main>
@@ -103,6 +144,9 @@ const StudioWorkspace: React.FC = () => {
 
       {/* Modern interactive Onboarding Flow Overlay */}
       <OnboardingModal isOpen={showOnboardingModal} onClose={() => setShowOnboardingModal(false)} />
+
+      {/* Premium custom Create App Modal */}
+      <CreateAppModal isOpen={showCreateAppModal} onClose={() => setShowCreateAppModal(false)} />
     </div>
   );
 };

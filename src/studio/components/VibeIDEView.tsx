@@ -6,13 +6,22 @@ import { IDEWorkspace } from './ide/IDEWorkspace';
 import { IDEPreview } from './ide/IDEPreview';
 import { PricingModal } from './PricingModal';
 
-export const VibeIDEView: React.FC = () => {
+const IS_PRODUCTION = false;
+
+export interface VibeIDEViewProps {
+  isLoading?: boolean;
+}
+
+export const VibeIDEView: React.FC<VibeIDEViewProps> = ({ isLoading = false }) => {
   const { 
     setCurrentView,
     finishSoundEnabled,
     showPricingModal,
     setShowPricingModal,
-    user
+    user,
+    consumeSparks,
+    addHoursSaved,
+    byokEnabled
   } = useStudioStore();
 
   // Selected sub-tab / views in the Vibe IDE
@@ -132,6 +141,41 @@ export const VibeIDEView: React.FC = () => {
       setInputText('');
     }
 
+    const promptLower = text.toLowerCase();
+    let sparkCost = 1;
+    if (promptLower.includes('calculator') || promptLower.includes('todo') || promptLower.includes('weather') || promptLower.includes('pomodoro') || promptLower.includes('budget') || promptLower.includes('assistant') || promptLower.includes('landing')) {
+      sparkCost = 2;
+    }
+    if (promptLower.includes('extract') || promptLower.includes('vision') || promptLower.includes('pixel')) sparkCost = 3;
+    if (promptLower.includes('voice') || promptLower.includes('transcription')) sparkCost = 4;
+    if (promptLower.includes('architecture') || promptLower.includes('database')) sparkCost = 5;
+
+    const canRun = consumeSparks(sparkCost);
+    if (!canRun) {
+      setMessages(prev => [...prev, {
+        sender: 'assistant',
+        text: 'Insufficient Sparks. Your balance is 0 or you have hit your daily velocity limit. Please upgrade your plan or top-up credits.',
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      }]);
+      setShowPricingModal(true);
+      return;
+    }
+
+    if (!IS_PRODUCTION && sparkCost >= 3) {
+      console.log('🛠️ Feature in development sandbox mode. Upstream API call bypassed.');
+      setMessages(prev => [...prev, {
+        sender: 'assistant',
+        text: '🛠️ Feature in development sandbox mode. Upstream API call bypassed. Using local mock payload to preserve zero-capital operation.',
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      }]);
+    }
+
+    // Add manual development hours saved
+    let hours = 5 / 60; // 5 mins
+    if (sparkCost === 2) hours = 15 / 60;
+    if (sparkCost >= 5) hours = 2;
+    addHoursSaved(hours);
+
     setIsCompiling(true);
 
     // Apply natural language mutations to preview based on keywords
@@ -246,6 +290,88 @@ export const VibeIDEView: React.FC = () => {
     handleVibeTrigger(prompt);
   };
 
+  if (isLoading) {
+    return (
+      <div className="fixed inset-0 bg-[#060709] text-zinc-300 font-sans flex flex-col overflow-hidden z-[100] animate-pulse select-none">
+        {/* Header Skeleton */}
+        <header className="relative z-10 w-full h-14 bg-[#07080c]/85 backdrop-blur-md border-b border-white/[0.04] flex items-center justify-between px-4">
+          <div className="flex items-center gap-3">
+            <div className="h-4 w-20 bg-white/5 rounded-full" />
+            <div className="h-6 w-24 bg-white/5 rounded-full" />
+            <div className="w-8 h-8 rounded-lg bg-white/5" />
+            <div className="h-4 w-32 bg-white/5 rounded-full" />
+          </div>
+          <div className="flex-1 max-w-sm mx-4 hidden md:block">
+            <div className="h-8 w-full bg-white/5 rounded-full" />
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="h-8 w-24 bg-white/5 rounded-full" />
+            <div className="h-8 w-20 bg-white/5 rounded-full" />
+            <div className="w-8 h-8 rounded-full bg-white/5" />
+          </div>
+        </header>
+
+        {/* Content Split Skeleton */}
+        <div className="flex-1 flex overflow-hidden w-full relative z-10">
+          {/* Left panel skeleton (Chat / Editor) */}
+          <div className="flex flex-col h-full bg-[#07080a] border-r border-white/[0.04] p-6 gap-6" style={{ width: workspaceWidth }}>
+            <div className="flex items-center justify-between pb-4 border-b border-white/[0.04]">
+              <div className="h-4 w-36 bg-white/5 rounded-full" />
+              <div className="flex gap-2">
+                <div className="h-6 w-16 bg-white/5 rounded-full" />
+                <div className="h-6 w-16 bg-white/5 rounded-full" />
+              </div>
+            </div>
+            <div className="flex-1 flex flex-col gap-4">
+              <div className="bg-white/[0.02] border border-white/5 rounded-2xl p-4 w-3/4 flex flex-col gap-2">
+                <div className="h-3.5 w-11/12 bg-white/5 rounded-full" />
+                <div className="h-3.5 w-5/6 bg-white/5 rounded-full" />
+              </div>
+              <div className="bg-white/5 border border-white/10 rounded-2xl p-4 w-1/2 ml-auto flex flex-col gap-2">
+                <div className="h-3.5 w-4/5 bg-white/5 rounded-full" />
+              </div>
+            </div>
+            <div className="bg-zinc-950/40 border border-white/5 rounded-2xl p-4 flex flex-col gap-3">
+              <div className="h-10 w-full bg-white/5 rounded-xl" />
+              <div className="flex justify-between items-center pt-2">
+                <div className="flex gap-2">
+                  <div className="w-8 h-8 rounded-full bg-white/5" />
+                  <div className="w-8 h-8 rounded-full bg-white/5" />
+                </div>
+                <div className="w-16 h-8 rounded-full bg-white/5" />
+              </div>
+            </div>
+          </div>
+
+          {/* Divider */}
+          <div className="w-2 h-full bg-[#060608] border-l border-r border-white/[0.02]" />
+
+          {/* Right panel skeleton (Preview) */}
+          <div className="flex-1 bg-[#08080c] flex flex-col h-full p-8 items-center justify-center">
+            <div className="w-full max-w-2xl aspect-[16/10] bg-[#09090d]/50 border border-white/[0.03] rounded-2xl p-6 flex flex-col justify-between">
+              <div className="flex justify-between items-center pb-4 border-b border-white/[0.02]">
+                <div className="h-4 w-24 bg-white/5 rounded-full" />
+                <div className="flex gap-3">
+                  <div className="h-3.5 w-12 bg-white/5 rounded-full" />
+                  <div className="h-3.5 w-12 bg-white/5 rounded-full" />
+                </div>
+              </div>
+              <div className="flex-1 flex flex-col justify-center items-center gap-4 py-8">
+                <div className="h-10 w-2/3 bg-white/5 rounded-full" />
+                <div className="h-4 w-1/2 bg-white/5 rounded-full" />
+                <div className="h-10 w-32 bg-white/5 rounded-full mt-4" />
+              </div>
+              <div className="flex justify-between items-center pt-4 border-t border-white/[0.02]">
+                <div className="h-3 w-40 bg-white/5 rounded-full" />
+                <div className="h-3 w-20 bg-white/5 rounded-full" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="fixed inset-0 bg-[#060709] text-zinc-300 font-sans flex flex-col overflow-hidden z-[100] animate-fadeIn">
       
@@ -272,6 +398,12 @@ export const VibeIDEView: React.FC = () => {
               l
             </div>
             <span className="font-heading text-base italic text-white tracking-wider select-none">lucid.dev</span>
+            {user.plan === 'Pro' && (
+              <span className="ml-1 px-1.5 py-0.5 bg-indigo-500/20 border border-indigo-500/50 rounded text-[9px] font-bold text-indigo-300 shadow-[0_0_8px_rgba(99,102,241,0.4)]">PRO</span>
+            )}
+            {user.plan === 'Business' && (
+              <span className="ml-1 px-1.5 py-0.5 bg-violet-500/20 border border-violet-500/50 rounded text-[9px] font-bold text-violet-300 shadow-[0_0_8px_rgba(139,92,246,0.5)]">BIZ</span>
+            )}
           </div>
 
           {/* Custom Toggle Button resembling the screenshot exactly */}
@@ -316,6 +448,12 @@ export const VibeIDEView: React.FC = () => {
             <Sparkles className="w-3 h-3 fill-black text-black" />
             <span>UPGRADE</span>
           </button>
+          
+          {/* Hours Saved Chip */}
+          <div className="hidden md:flex items-center gap-1.5 px-3 py-1 bg-white/5 border border-white/10 rounded-full cursor-help" title="Manual Development Hours Saved">
+            <span className="text-[11px] text-zinc-400 font-medium">Saved:</span>
+            <span className="text-[11px] font-bold text-emerald-400 font-mono tracking-tight">{useStudioStore.getState().hoursSaved.toFixed(1)}h</span>
+          </div>
 
           {/* Sparks zap chip - Pill styled, glowing purple/blue border */}
           <div className="flex items-center gap-1.5 px-3 py-1 bg-[#1a1c35]/35 hover:bg-[#1a1c35]/50 border border-[#6366f1]/25 rounded-full transition-all duration-300 shadow-[0_2px_12px_rgba(99,102,241,0.05)]">

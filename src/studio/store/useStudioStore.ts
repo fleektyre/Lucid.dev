@@ -10,11 +10,18 @@ interface StudioState {
   showPricingModal: boolean;
   showOnboardingModal: boolean;
   showSettingsModal: boolean;
+  showCreateAppModal: boolean;
   currentView: 'chat' | 'settings' | 'all_apps' | 'vibe';
   activeSettingsTab: string;
   notifications: AppNotification[];
   glowFeatureEnabled: boolean;
   finishSoundEnabled: boolean;
+  
+  // Zero-capital tracking properties
+  byokEnabled: boolean;
+  dailySparksUsed: number;
+  lastSparkReset: string;
+  hoursSaved: number;
   
   setUser: (user: User) => void;
   setProject: (project: Project) => void;
@@ -23,10 +30,14 @@ interface StudioState {
   setShowPricingModal: (open: boolean) => void;
   setShowOnboardingModal: (open: boolean) => void;
   setShowSettingsModal: (open: boolean) => void;
+  setShowCreateAppModal: (open: boolean) => void;
   setCurrentView: (view: 'chat' | 'settings' | 'all_apps' | 'vibe') => void;
   setActiveSettingsTab: (tab: string) => void;
   setGlowFeatureEnabled: (enabled: boolean) => void;
   setFinishSoundEnabled: (enabled: boolean) => void;
+  setByokEnabled: (enabled: boolean) => void;
+  addHoursSaved: (hours: number) => void;
+  consumeSparks: (amount: number) => boolean;
   
   // Notification actions
   addNotification: (type: 'ai' | 'billing' | 'error' | 'info', title: string, message: string) => void;
@@ -38,6 +49,7 @@ interface StudioState {
   // Credit actions
   addCredits: (amount: number) => void;
   setPackageCredits: (maxAmount: number) => void;
+  setPlan: (plan: 'Free' | 'Pro' | 'Business') => void;
 }
 
 export const useStudioStore = create<StudioState>()(
@@ -49,7 +61,8 @@ export const useStudioStore = create<StudioState>()(
         email: 'fleetyre77@gmail.com',
         credits: 10,
         maxCredits: 10,
-        avatarUrl: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop'
+        avatarUrl: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop',
+        plan: 'Free'
       },
       currentProject: {
         id: 'p1',
@@ -67,10 +80,15 @@ export const useStudioStore = create<StudioState>()(
       showPricingModal: false,
       showOnboardingModal: false,
       showSettingsModal: false,
+      showCreateAppModal: false,
       currentView: 'chat',
       activeSettingsTab: 'general',
       glowFeatureEnabled: false,
       finishSoundEnabled: true,
+      byokEnabled: false,
+      dailySparksUsed: 0,
+      lastSparkReset: new Date().toISOString().split('T')[0],
+      hoursSaved: 0,
       
       notifications: [],
 
@@ -86,10 +104,48 @@ export const useStudioStore = create<StudioState>()(
         set({ showOnboardingModal: open });
       },
       setShowSettingsModal: (open) => set({ showSettingsModal: open }),
+      setShowCreateAppModal: (open) => set({ showCreateAppModal: open }),
       setCurrentView: (currentView) => set({ currentView }),
       setActiveSettingsTab: (activeSettingsTab) => set({ activeSettingsTab }),
       setGlowFeatureEnabled: (glowFeatureEnabled) => set({ glowFeatureEnabled }),
       setFinishSoundEnabled: (finishSoundEnabled) => set({ finishSoundEnabled }),
+      setByokEnabled: (byokEnabled) => set({ byokEnabled }),
+      addHoursSaved: (hours) => set((state) => ({ hoursSaved: state.hoursSaved + hours })),
+      
+      consumeSparks: (amount) => {
+        let allowed = false;
+        set((state) => {
+          const today = new Date().toISOString().split('T')[0];
+          let sparksUsedToday = state.lastSparkReset === today ? state.dailySparksUsed : 0;
+          
+          let dailyLimit = 3; // Free
+          if (state.user.plan === 'Pro') dailyLimit = 30;
+          if (state.user.plan === 'Business') dailyLimit = 150;
+          
+          if (state.byokEnabled) {
+            allowed = true; // Unlimited via BYOK
+            return { lastSparkReset: today }; // Just keep tracking dates
+          }
+          
+          if (sparksUsedToday + amount <= dailyLimit && state.user.credits >= amount) {
+            allowed = true;
+            return {
+              dailySparksUsed: sparksUsedToday + amount,
+              lastSparkReset: today,
+              user: {
+                ...state.user,
+                credits: state.user.credits - amount
+              }
+            };
+          }
+          allowed = false;
+          return {
+            dailySparksUsed: sparksUsedToday,
+            lastSparkReset: today
+          };
+        });
+        return allowed;
+      },
       
       addNotification: (type, title, message) => {},
       
@@ -120,6 +176,13 @@ export const useStudioStore = create<StudioState>()(
           ...state.user,
           credits: maxAmount,
           maxCredits: maxAmount
+        }
+      })),
+
+      setPlan: (plan) => set((state) => ({
+        user: {
+          ...state.user,
+          plan
         }
       }))
     }),

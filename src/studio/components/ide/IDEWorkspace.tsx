@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Smartphone, X, History, GitBranch, Plus, Sparkles, Loader2, 
   MousePointer, Sliders, FileText, User, Mail, Shield, Layers, 
-  Globe, PenTool, Mic, ArrowUp, ArrowDown, HelpCircle, Star, Check, ChevronDown, Copy,
+  Globe, PenTool, Mic, ArrowUp, ArrowDown, HelpCircle, Star, Check, ChevronDown, ChevronLeft, Copy,
   Cpu, Database, Key, Play, TrendingUp, AlertTriangle, RefreshCw, Zap, DollarSign,
   Github, Download, Terminal, Settings, Trash2
 } from 'lucide-react';
@@ -72,6 +72,7 @@ interface WorkspaceFile {
 }
 
 interface IDEWorkspaceProps {
+  isLoading?: boolean;
   activeTab: string;
   setActiveTab: (tab: any) => void;
   messages: Message[];
@@ -97,6 +98,7 @@ interface IDEWorkspaceProps {
 }
 
 export const IDEWorkspace: React.FC<IDEWorkspaceProps> = ({
+  isLoading = false,
   activeTab,
   setActiveTab,
   messages,
@@ -144,6 +146,12 @@ export const IDEWorkspace: React.FC<IDEWorkspaceProps> = ({
   // ZIP and GitHub sync integration states
   const [githubToken, setGithubToken] = useState(() => localStorage.getItem('lucid_github_token') || '');
   const [githubRepo, setGithubRepo] = useState(() => localStorage.getItem('lucid_github_repo') || '');
+  const [isCreateRepoModalOpen, setIsCreateRepoModalOpen] = useState(false);
+  const [tempRepoName, setTempRepoName] = useState('your-repository');
+  const [showRepoDropdown, setShowRepoDropdown] = useState(false);
+  const [githubSettingsOpen, setGithubSettingsOpen] = useState(false);
+  const [isGithubDrawerOpen, setIsGithubDrawerOpen] = useState(false);
+  const [commitMessage, setCommitMessage] = useState('feat: migrate from Supabase to Firebase\n\nReplace Supabase with Firebase Admin SDK for backend database operations and update UI settings components to reflect the new integration');
   const [isExporting, setIsExporting] = useState(false);
   const [exportType, setExportType] = useState<'zip' | 'github' | null>(null);
   const [exportSteps, setExportSteps] = useState<{ cmd: string; result: string; status: 'idle' | 'running' | 'success' | 'error' }[]>([
@@ -170,10 +178,8 @@ export const IDEWorkspace: React.FC<IDEWorkspaceProps> = ({
     };
 
     const handleGithubEvent = () => {
-      setActiveTab('files');
-      setTimeout(() => {
-        triggerGithubPush();
-      }, 150);
+      setTempRepoName(githubRepo || 'your-repository');
+      setIsCreateRepoModalOpen(true);
     };
 
     const handleShowCodebaseEvent = () => {
@@ -778,6 +784,14 @@ body {
 
   const triggerZipDownload = async () => {
     if (isExporting) return;
+    
+    const store = useStudioStore.getState();
+    if (store.user.plan === 'Free') {
+      store.addNotification('error', 'PAYWALL_TRIGGER', 'Static bundle compilation & export is restricted to Pro and Business tiers. Please upgrade your workspace.');
+      store.setShowPricingModal(true);
+      return;
+    }
+    
     setIsExporting(true);
     setExportType('zip');
     
@@ -863,11 +877,21 @@ export default defineConfig({
 
   const triggerGithubPush = async () => {
     if (isExporting) return;
+    
+    const store = useStudioStore.getState();
+    if (store.user.plan === 'Free') {
+      store.addNotification('error', 'PAYWALL_TRIGGER', 'Site Publishing to external repositories is restricted to Pro and Business tiers. Please upgrade your workspace.');
+      store.setShowPricingModal(true);
+      return;
+    }
+    
     if (!githubToken.trim()) {
+      setGithubSettingsOpen(true);
       addNotification('error', 'GitHub Token Required', 'Please provide a GitHub Personal Access Token to push.');
       return;
     }
     if (!githubRepo.trim()) {
+      setGithubSettingsOpen(true);
       addNotification('error', 'Repo Name Required', 'Please specify a repository name.');
       return;
     }
@@ -1022,7 +1046,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
             'Accept': 'application/vnd.github.v3+json'
           },
           body: JSON.stringify({
-            message: `Deploying ${file.path} via Lucid AI`,
+            message: `${commitMessage.split('\n')[0] || 'Sync file'} - ${file.path}`,
             content: btoa(unescape(encodeURIComponent(file.content))),
             sha: fileSha || undefined
           })
@@ -1090,6 +1114,68 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     
     return <div className="min-h-[1.25rem] select-text">{jsx}</div>;
   };
+
+  if (isLoading) {
+    return (
+      <main 
+        id="ide-workspace" 
+        className="flex flex-col h-full bg-[#07080a] border-r border-white/[0.04] relative shrink-0 select-none animate-pulse"
+        style={{ 
+          width: isExtended ? '100%' : width, 
+          minWidth: isExtended ? 'unset' : '340px',
+          maxWidth: isExtended ? '100%' : '90%'
+        }}
+      >
+        {/* Workspace Tab Header Skeleton */}
+        <header className="h-[52px] border-b border-white/[0.04] px-4 flex items-center justify-between bg-[#09090c]">
+          <div className="flex items-center gap-2">
+            <div className="h-4 w-36 bg-white/5 rounded-full" />
+            <div className="w-4 h-4 bg-white/5 rounded-full" />
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="h-6 w-16 bg-white/5 rounded-full" />
+            <div className="h-6 w-16 bg-white/5 rounded-full" />
+          </div>
+        </header>
+
+        {/* Tab Selection Header Skeleton */}
+        <div className="h-10 border-b border-white/[0.04] flex items-center px-4 bg-[#08080a] gap-4">
+          <div className="h-4 w-20 bg-white/5 rounded-full" />
+          <div className="h-4 w-20 bg-white/5 rounded-full" />
+        </div>
+
+        {/* Main Workspace Scroll Area Skeleton */}
+        <div className="flex-1 p-6 flex flex-col gap-5 justify-between overflow-hidden">
+          {/* Chat Messages Skeleton */}
+          <div className="flex flex-col gap-4 overflow-hidden">
+            <div className="flex justify-start">
+              <div className="bg-white/[0.02] border border-white/5 rounded-2xl p-4 w-2/3 flex flex-col gap-2">
+                <div className="h-3.5 w-11/12 bg-white/5 rounded-full" />
+                <div className="h-3.5 w-5/6 bg-white/5 rounded-full" />
+              </div>
+            </div>
+            <div className="flex justify-end">
+              <div className="bg-white/5 border border-white/10 rounded-2xl p-4 w-1/2 flex flex-col gap-2">
+                <div className="h-3.5 w-4/5 bg-white/5 rounded-full" />
+              </div>
+            </div>
+          </div>
+
+          {/* Prompt Entry Box Skeleton */}
+          <div className="w-full bg-zinc-950/40 border border-white/5 rounded-2xl p-4 flex flex-col gap-3">
+            <div className="h-10 w-full bg-white/5 rounded-xl" />
+            <div className="flex justify-between items-center pt-2">
+              <div className="flex gap-2">
+                <div className="w-8 h-8 rounded-full bg-white/5" />
+                <div className="w-8 h-8 rounded-full bg-white/5" />
+              </div>
+              <div className="w-16 h-8 rounded-full bg-white/5" />
+            </div>
+          </div>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main 
@@ -1424,7 +1510,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
 
                 {/* GitHub Sync & Export collapsible configuration panel */}
                 <div className="mt-6 border-t border-white/[0.04] pt-4">
-                  <details className="group">
+                  <details className="group" open={githubSettingsOpen} onToggle={(e) => setGithubSettingsOpen(e.currentTarget.open)}>
                     <summary className="flex items-center justify-between text-xs font-bold text-zinc-400 hover:text-white transition-colors cursor-pointer select-none list-none">
                       <div className="flex items-center gap-2">
                         <Github className="w-4 h-4 text-zinc-500" />
@@ -1739,6 +1825,378 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
                   Got it
                 </button>
               </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Beautiful Pop-out "Create a GitHub repository" Modal exactly like the screenshot */}
+      <AnimatePresence>
+        {isCreateRepoModalOpen && (
+          <div className="fixed inset-0 z-[2000] flex items-center justify-center p-4">
+            {/* Dark translucent backdrop */}
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsCreateRepoModalOpen(false)}
+              className="absolute inset-0 bg-black/80 backdrop-blur-md"
+            />
+            
+            {/* Modal Card content container */}
+            <motion.div 
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              transition={{ type: "spring", damping: 25, stiffness: 220 }}
+              className="relative w-full max-w-[500px] bg-[#0c0c0e] border border-white/10 rounded-2xl shadow-2xl p-6 overflow-visible z-10"
+            >
+              {/* GitHub icon badge inside dark ring & X close button */}
+              <div className="flex items-center justify-between mb-6">
+                <div className="w-10 h-10 rounded-full bg-zinc-900 border border-white/10 flex items-center justify-center">
+                  <Github className="w-5 h-5 text-white" />
+                </div>
+                <button 
+                  onClick={() => setIsCreateRepoModalOpen(false)}
+                  className="p-1.5 hover:bg-white/5 rounded-full text-zinc-400 hover:text-white transition-colors cursor-pointer bg-transparent border-none"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* Header Title & Subtitle */}
+              <h3 className="text-xl font-bold text-white font-sans tracking-tight">Create a GitHub repository</h3>
+              <p className="text-xs text-zinc-400 mt-1 mb-5 leading-relaxed font-sans">
+                Create a new private repository on GitHub and link it to your project.
+              </p>
+
+              {/* Alert notification callout box matching Bolt design exactly */}
+              <div className="p-3.5 rounded-xl bg-indigo-500/[0.03] border border-indigo-500/15 flex gap-2.5 mb-5">
+                <AlertTriangle className="w-4 h-4 text-indigo-400 shrink-0 mt-0.5" />
+                <div className="text-[11px] text-zinc-400 leading-relaxed font-sans">
+                  Only organizations that have the <span className="text-zinc-200">Lucid GitHub App</span> installed by an administrator will be shown.{" "}
+                  <a 
+                    href="https://github.com/apps/lucid-dev-sync" 
+                    target="_blank" 
+                    rel="noreferrer" 
+                    className="text-indigo-400 hover:underline font-medium inline-flex items-center gap-0.5"
+                  >
+                    Configure the GitHub App
+                  </a>
+                </div>
+              </div>
+
+              {/* User profile row */}
+              <div className="flex items-center gap-2.5 mb-5">
+                <div className="w-6 h-6 rounded-full bg-amber-500/20 border border-amber-500/30 text-amber-400 flex items-center justify-center font-bold text-[10px] font-sans">
+                  FT
+                </div>
+                <span className="text-xs font-semibold text-zinc-300 font-sans">fleektyre</span>
+              </div>
+
+              {/* Repository Input container with dropdown pop-out suggestions */}
+              <div className="space-y-1.5 relative mb-8">
+                <label className="block text-[10px] font-bold text-zinc-500 uppercase tracking-widest font-sans">
+                  Repository
+                </label>
+                <div className="relative">
+                  <input 
+                    type="text"
+                    value={tempRepoName}
+                    onChange={(e) => {
+                      setTempRepoName(e.target.value);
+                      setShowRepoDropdown(true);
+                    }}
+                    onFocus={() => setShowRepoDropdown(true)}
+                    placeholder="your-repository"
+                    className="w-full px-3.5 py-2.5 bg-black/40 border border-white/10 rounded-xl text-xs font-sans text-white focus:outline-none focus:border-blue-500/80 focus:ring-1 focus:ring-blue-500/30 transition-all placeholder-zinc-700 font-medium"
+                  />
+                  
+                  {/* Suggestions Dropdown Popup */}
+                  <AnimatePresence>
+                    {showRepoDropdown && (
+                      <>
+                        <div 
+                          className="fixed inset-0 z-10" 
+                          onClick={() => setShowRepoDropdown(false)} 
+                        />
+                        <motion.div 
+                          initial={{ opacity: 0, y: -4 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -4 }}
+                          className="absolute left-0 right-0 mt-1 bg-[#121214] border border-white/10 rounded-xl shadow-xl z-20 overflow-hidden divide-y divide-white/[0.04]"
+                        >
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setTempRepoName("SEM");
+                              setShowRepoDropdown(false);
+                            }}
+                            className="w-full px-3.5 py-2 text-left text-xs font-sans text-zinc-300 hover:text-white hover:bg-white/5 transition-colors font-medium border-none bg-transparent cursor-pointer"
+                          >
+                            SEM
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setTempRepoName("COMIC-BOOK");
+                              setShowRepoDropdown(false);
+                            }}
+                            className="w-full px-3.5 py-2 text-left text-xs font-sans text-zinc-300 hover:text-white hover:bg-white/5 transition-colors font-medium border-none bg-transparent cursor-pointer"
+                          >
+                            COMIC-BOOK
+                          </button>
+                        </motion.div>
+                      </>
+                    )}
+                  </AnimatePresence>
+                </div>
+              </div>
+
+              {/* Action Buttons footer */}
+              <div className="flex items-center justify-end gap-3 border-t border-white/[0.04] pt-5">
+                <button 
+                  type="button"
+                  onClick={() => setIsCreateRepoModalOpen(false)}
+                  className="px-4 py-2 rounded-lg text-xs font-semibold text-zinc-400 hover:text-white hover:bg-white/5 transition-colors cursor-pointer border-none bg-transparent"
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="button"
+                  onClick={() => {
+                    if (!tempRepoName.trim() || tempRepoName === "your-repository") {
+                      addNotification('error', 'Invalid Name', 'Please specify a repository name first.');
+                      return;
+                    }
+                    handleGithubRepoChange(tempRepoName);
+                    setIsCreateRepoModalOpen(false);
+                    setIsGithubDrawerOpen(true);
+                    addNotification('info', 'Repository Linked', `Successfully configured repository as github.com/${tempRepoName}`);
+                  }}
+                  className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white text-xs font-semibold font-sans transition-all cursor-pointer border-none flex items-center gap-1.5 shadow-[0_0_15px_rgba(37,99,235,0.2)] hover:shadow-[0_0_20px_rgba(37,99,235,0.4)]"
+                >
+                  Create repository
+                </button>
+              </div>
+
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Beautiful Pop-out GitHub Sync Modal */}
+      <AnimatePresence>
+        {isGithubDrawerOpen && (
+          <div className="fixed inset-0 z-[1050] flex items-center justify-center p-4">
+            {/* Dark translucent backdrop */}
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsGithubDrawerOpen(false)}
+              className="absolute inset-0 bg-black/80 backdrop-blur-md"
+            />
+            
+            {/* Modal Card content container */}
+            <motion.div 
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              transition={{ type: "spring", damping: 25, stiffness: 220 }}
+              className="relative w-full max-w-[500px] bg-[#0c0c0e] border border-white/10 rounded-2xl shadow-2xl p-6 overflow-y-auto max-h-[90vh] custom-scrollbar z-10 space-y-5"
+            >
+              {/* GitHub icon badge inside dark ring & X close button */}
+              <div className="flex items-center justify-between">
+                <div className="w-10 h-10 rounded-full bg-zinc-900 border border-white/10 flex items-center justify-center">
+                  <Github className="w-5 h-5 text-indigo-400" />
+                </div>
+                <button 
+                  onClick={() => setIsGithubDrawerOpen(false)}
+                  className="p-1.5 hover:bg-white/5 rounded-full text-zinc-400 hover:text-white transition-colors cursor-pointer bg-transparent border-none"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* Title & Description */}
+              <div>
+                <h3 className="text-xl font-bold font-heading italic text-white flex items-center gap-2.5">
+                  Sync to GitHub
+                </h3>
+                <p className="text-xs text-zinc-400 mt-1 leading-relaxed font-sans">
+                  Export, commit, and push this compiled sandbox codebase into your remote repository.
+                </p>
+              </div>
+              
+              {/* Repository details banner with link disconnect state */}
+              <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/[0.04]">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider font-sans">Repository</span>
+                  <div className="flex items-center gap-2">
+                    <button 
+                      onClick={() => {
+                        setGithubRepo('');
+                        addNotification('info', 'Repository Disconnected', 'Active GitHub link removed.');
+                      }}
+                      className="p-1 hover:bg-white/5 rounded text-zinc-400 hover:text-white transition-colors border-none bg-transparent cursor-pointer" 
+                      title="Disconnect Repo"
+                    >
+                      <User className="w-3.5 h-3.5" />
+                    </button>
+                    <button 
+                      onClick={() => {
+                        setTempRepoName(githubRepo || 'your-repository');
+                        setIsCreateRepoModalOpen(true);
+                      }}
+                      className="p-1 hover:bg-white/5 rounded text-zinc-400 hover:text-white transition-colors border-none bg-transparent cursor-pointer"
+                      title="Create/Link New Repository"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                    </button>
+                    <a 
+                      href={`https://github.com/${githubRepo ? githubRepo : 'fleetyre/Lucid.dev'}`} 
+                      target="_blank" 
+                      rel="noreferrer"
+                      className="p-1 hover:bg-white/5 rounded text-zinc-400 hover:text-white transition-colors"
+                      title="View on GitHub"
+                    >
+                      <Globe className="w-3.5 h-3.5" />
+                    </a>
+                  </div>
+                </div>
+                
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-mono font-bold text-white">
+                    {githubRepo ? `github.com/${githubRepo}` : 'fleetyre/Lucid.dev'}
+                  </span>
+                  <span className="text-[9px] bg-white/5 text-zinc-400 border border-white/[0.05] px-1.5 py-0.5 rounded-full font-mono flex items-center gap-1 select-none">
+                    <span className="w-1.5 h-1.5 bg-[#4f46e5] rounded-full" /> main
+                  </span>
+                </div>
+              </div>
+              
+              {/* Commit Message Box */}
+              <div className="space-y-1.5">
+                <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider font-sans">
+                  What changes did you make?
+                </label>
+                <textarea 
+                  value={commitMessage}
+                  onChange={(e) => setCommitMessage(e.target.value)}
+                  placeholder="Describe your commit changes..."
+                  rows={4}
+                  className="w-full bg-black/40 border border-white/5 rounded-xl text-xs text-white p-3.5 focus:outline-none focus:border-indigo-500/50 transition-colors font-sans leading-relaxed resize-none"
+                />
+              </div>
+              
+              {/* Auto staged items lists exactly like screenshot */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider font-sans">
+                    {workspaceFiles.length + 3} changed files
+                  </span>
+                  <span className="text-[8px] text-zinc-500 uppercase font-mono">auto-staged</span>
+                </div>
+                
+                <div className="max-h-[140px] overflow-y-auto border border-white/[0.04] bg-black/20 rounded-xl divide-y divide-white/[0.03] custom-scrollbar text-[11px] font-mono">
+                  <div className="flex items-center justify-between p-2 px-3">
+                    <span className="text-zinc-300 truncate max-w-[280px]">package.json</span>
+                    <span className="text-[9px] text-amber-500 bg-amber-500/5 px-1.5 py-0.5 rounded border border-amber-500/10 font-bold font-sans">Modified</span>
+                  </div>
+                  <div className="flex items-center justify-between p-2 px-3">
+                    <span className="text-zinc-300 truncate max-w-[280px]">server.ts</span>
+                    <span className="text-[9px] text-amber-500 bg-amber-500/5 px-1.5 py-0.5 rounded border border-amber-500/10 font-bold font-sans">Modified</span>
+                  </div>
+                  <div className="flex items-center justify-between p-2 px-3">
+                    <span className="text-zinc-300 truncate max-w-[280px]">src/studio/panels/AIPanel.tsx</span>
+                    <span className="text-[9px] text-amber-500 bg-amber-500/5 px-1.5 py-0.5 rounded border border-amber-500/10 font-bold font-sans">Modified</span>
+                  </div>
+                  <div className="flex items-center justify-between p-2 px-3">
+                    <span className="text-zinc-300 truncate max-w-[280px]">src/App.tsx</span>
+                    <span className="text-[9px] text-amber-500 bg-amber-500/5 px-1.5 py-0.5 rounded border border-amber-500/10 font-bold font-sans">Modified</span>
+                  </div>
+                  <div className="flex items-center justify-between p-2 px-3">
+                    <span className="text-zinc-300 truncate max-w-[280px]">src/index.css</span>
+                    <span className="text-[9px] text-amber-500 bg-amber-500/5 px-1.5 py-0.5 rounded border border-amber-500/10 font-bold font-sans">Modified</span>
+                  </div>
+                  <div className="flex items-center justify-between p-2 px-3">
+                    <span className="text-zinc-300 truncate max-w-[280px]">{`src/${getFileName(generatedAppType)}`}</span>
+                    <span className="text-[9px] text-emerald-500 bg-emerald-500/5 px-1.5 py-0.5 rounded border border-emerald-500/10 font-bold font-sans">Added</span>
+                  </div>
+                  <div className="flex items-center justify-between p-2 px-3">
+                    <span className="text-zinc-300 truncate max-w-[280px]">firebase-applet-config.json</span>
+                    <span className="text-[9px] text-emerald-500 bg-emerald-500/5 px-1.5 py-0.5 rounded border border-emerald-500/10 font-bold font-sans">Added</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Pipeline compilation terminal log streams directly inside drawer */}
+              {exportSteps.length > 0 && (
+                <div className="rounded-xl bg-[#030305] border border-white/[0.05] overflow-hidden animate-fadeIn shadow-xl">
+                  <div className="flex items-center justify-between px-3 py-1.5 bg-zinc-950/85 border-b border-white/[0.03]">
+                    <div className="flex items-center gap-1.5 text-[8.5px] font-mono font-bold tracking-widest text-zinc-400">
+                      <Terminal className="w-3 h-3 text-indigo-400" />
+                      <span>PIPELINE LOGS</span>
+                    </div>
+                    <button 
+                      onClick={() => setExportSteps([])}
+                      className="text-[8.5px] font-bold text-zinc-500 hover:text-white transition-colors cursor-pointer bg-transparent border-none"
+                    >
+                      Clear Logs
+                    </button>
+                  </div>
+                  <div className="p-3 font-mono text-[9px] leading-relaxed space-y-2 max-h-[140px] overflow-y-auto custom-scrollbar">
+                    {exportSteps.map((step, idx) => (
+                      <div key={idx} className="space-y-0.5">
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-indigo-400 font-bold">➜</span>
+                          <span className="text-zinc-200">{step.cmd}</span>
+                          {step.status === 'running' && (
+                            <Loader2 className="w-2.5 h-2.5 text-indigo-400 animate-spin shrink-0" />
+                          )}
+                        </div>
+                        {step.result && (
+                          <div className="pl-3 text-zinc-500">
+                            {step.status === 'success' && <span className="text-emerald-400 mr-1">✓</span>}
+                            {step.status === 'error' && <span className="text-red-400 mr-1">✗</span>}
+                            <span>{step.result}</span>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              {/* Modal buttons footer */}
+              <div className="flex items-center justify-end gap-3 border-t border-white/[0.04] pt-5">
+                <button 
+                  type="button"
+                  onClick={() => setIsGithubDrawerOpen(false)}
+                  className="px-4 py-2 rounded-lg text-xs font-semibold text-zinc-400 hover:text-white hover:bg-white/5 transition-colors cursor-pointer border-none bg-transparent"
+                >
+                  Cancel
+                </button>
+                <button 
+                  onClick={() => triggerGithubPush()}
+                  disabled={isExporting}
+                  className="px-5 py-2.5 rounded-full bg-white hover:bg-zinc-200 disabled:bg-zinc-900 disabled:text-zinc-600 text-black text-xs font-bold font-sans transition-all cursor-pointer border-none flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(255,255,255,0.06)] hover:shadow-[0_0_25px_rgba(255,255,255,0.12)] active:scale-[0.98]"
+                >
+                  {isExporting ? (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      <span>Syncing payload...</span>
+                    </>
+                  ) : (
+                    <>
+                      <GitBranch className="w-3.5 h-3.5" />
+                      <span>Stage and commit all changes</span>
+                    </>
+                  )}
+                </button>
+              </div>
+
             </motion.div>
           </div>
         )}

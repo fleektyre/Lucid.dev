@@ -38,7 +38,6 @@ export const SettingsView: React.FC = () => {
     { id: 'applications', label: 'Applications', icon: Layers, section: 'Account' },
     { id: 'knowledge', label: 'Knowledge', icon: BookOpen, section: 'Account' },
     { id: 'connectors', label: 'Connectors (MCP)', icon: Cpu, section: 'Account' },
-    { id: 'addons', label: 'Add-on features', icon: Sparkles, section: 'Account' },
     { id: 'subscription', label: 'Subscription & Sparks', icon: CreditCard, section: 'Workspace' },
     { id: 'cloud', label: 'Cloud', icon: Cloud, section: 'Workspace' },
   ];
@@ -139,9 +138,7 @@ export const SettingsView: React.FC = () => {
             <ConnectorsSettings triggerToast={triggerToast} />
           )}
 
-          {activeSettingsTab === 'addons' && (
-            <AddonsSettings triggerToast={triggerToast} />
-          )}
+
 
           {activeSettingsTab === 'subscription' && (
             <SubscriptionSettings userEmail={user.email} triggerToast={triggerToast} />

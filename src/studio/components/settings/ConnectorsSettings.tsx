@@ -8,7 +8,7 @@ interface ConnectorsSettingsProps {
 export const ConnectorsSettings: React.FC<ConnectorsSettingsProps> = ({ triggerToast }) => {
   const [connectors, setConnectors] = useState([
     { id: '1', name: 'Slack workspace integration', url: 'https://mcp.lucid.dev/slack', status: 'online', type: 'API Router' },
-    { id: '2', name: 'Supabase schema retriever', url: 'https://mcp.lucid.dev/supabase', status: 'online', type: 'Database connection' },
+    { id: '2', name: 'Firebase schema retriever', url: 'https://mcp.lucid.dev/firebase', status: 'online', type: 'Database connection' },
     { id: '3', name: 'Netlify edge deployment webhook', url: 'https://mcp.lucid.dev/netlify', status: 'offline', type: 'deployment webhook' },
   ]);
 

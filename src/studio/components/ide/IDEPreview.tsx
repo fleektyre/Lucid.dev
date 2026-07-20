@@ -7,8 +7,10 @@ import {
 } from 'lucide-react';
 import { useStudioStore } from '../../store/useStudioStore';
 import { InteractiveIDEMockup } from './InteractiveIDEMockup';
+import { ShareProjectModal } from './ShareProjectModal';
 
 interface IDEPreviewProps {
+  isLoading?: boolean;
   activePreviewDevice: 'desktop' | 'mobile';
   setActivePreviewDevice: (device: 'desktop' | 'mobile') => void;
   previewTheme: 'light' | 'dark' | 'glass' | 'cosmic';
@@ -421,6 +423,7 @@ const AIChatSimulator: React.FC = () => {
 };
 
 export const IDEPreview: React.FC<IDEPreviewProps> = ({
+  isLoading = false,
   activePreviewDevice,
   setActivePreviewDevice,
   previewTheme,
@@ -434,7 +437,8 @@ export const IDEPreview: React.FC<IDEPreviewProps> = ({
 }) => {
   const [mobileSubDevice, setMobileSubDevice] = useState<'phone' | 'tablet_portrait' | 'tablet_landscape'>('phone');
   const [showCodebaseIDE, setShowCodebaseIDE] = useState<boolean>(false);
-  const { setShowPricingModal, addNotification } = useStudioStore();
+  const [isShareModalOpen, setIsShareModalOpen] = useState<boolean>(false);
+  const { setShowPricingModal, addNotification, setShowCreateAppModal } = useStudioStore();
 
   useEffect(() => {
     const handleShowCodebase = () => {
@@ -446,7 +450,51 @@ export const IDEPreview: React.FC<IDEPreviewProps> = ({
     };
   }, []);
 
+  if (isLoading) {
+    return (
+      <section id="ide-preview" className="flex-1 bg-[#08080c] flex flex-col h-full min-w-0 animate-pulse select-none">
+        {/* Browser Mockup Toolbar Header Skeleton */}
+        <header className="h-[52px] border-b border-white/[0.04] px-4 flex items-center justify-between bg-[#060608]">
+          <div className="flex items-center gap-3">
+            <div className="h-4 w-16 bg-white/5 rounded-full" />
+            <div className="h-6 w-16 bg-white/5 rounded-lg" />
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="h-6 w-32 bg-white/5 rounded-full" />
+            <div className="h-6 w-16 bg-white/5 rounded-full" />
+          </div>
+        </header>
 
+        {/* Live Preview Container Skeleton */}
+        <div className="flex-1 p-8 flex flex-col items-center justify-center bg-[#040406]">
+          {/* Mockup Frame */}
+          <div className="w-full max-w-2xl aspect-[16/10] bg-[#09090d]/50 border border-white/[0.03] rounded-2xl p-6 flex flex-col justify-between">
+            {/* Mock Header */}
+            <div className="flex justify-between items-center pb-4 border-b border-white/[0.02]">
+              <div className="h-4 w-24 bg-white/5 rounded-full" />
+              <div className="flex gap-3">
+                <div className="h-3.5 w-12 bg-white/5 rounded-full" />
+                <div className="h-3.5 w-12 bg-white/5 rounded-full" />
+              </div>
+            </div>
+
+            {/* Mock Body */}
+            <div className="flex-1 flex flex-col justify-center items-center gap-4 py-8">
+              <div className="h-10 w-2/3 bg-white/5 rounded-full" />
+              <div className="h-4 w-1/2 bg-white/5 rounded-full" />
+              <div className="h-10 w-32 bg-white/5 rounded-full mt-4" />
+            </div>
+
+            {/* Mock Footer */}
+            <div className="flex justify-between items-center pt-4 border-t border-white/[0.02]">
+              <div className="h-3 w-40 bg-white/5 rounded-full" />
+              <div className="h-3 w-20 bg-white/5 rounded-full" />
+            </div>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section id="ide-preview" className="flex-1 bg-[#08080c] flex flex-col h-full min-w-0">
@@ -552,9 +600,7 @@ export const IDEPreview: React.FC<IDEPreviewProps> = ({
             </button>
             <button 
               onClick={() => {
-                navigator.clipboard.writeText(window.location.href);
-                addNotification('info', 'Collaborator Link Copied', 'Project share link copied to clipboard! Send it to invite your team.');
-                playChime?.();
+                setIsShareModalOpen(true);
               }}
               className="w-8 h-8 rounded-lg border border-white/[0.08] bg-white/[0.01] hover:bg-white/5 flex items-center justify-center text-zinc-400 hover:text-white transition-all cursor-pointer focus:outline-none"
               title="Add Collaborator / Share"
@@ -774,6 +820,11 @@ export const IDEPreview: React.FC<IDEPreviewProps> = ({
           </div>
         )}
       </div>
+
+      <ShareProjectModal 
+        isOpen={isShareModalOpen} 
+        onClose={() => setIsShareModalOpen(false)} 
+      />
 
     </section>
   );

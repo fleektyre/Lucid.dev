@@ -6,8 +6,14 @@ import {
 } from 'lucide-react';
 import { useStudioStore } from '../store/useStudioStore';
 import { useNavigate } from 'react-router-dom';
+import { auth } from '../../lib/firebase/client';
+import { signOut } from 'firebase/auth';
 
-export const TopNav: React.FC = () => {
+export interface TopNavProps {
+  isLoading?: boolean;
+}
+
+export const TopNav: React.FC<TopNavProps> = ({ isLoading = false }) => {
   const { 
     user, 
     currentProject, 
@@ -24,6 +30,15 @@ export const TopNav: React.FC = () => {
   const [showWorkspaceMenu, setShowWorkspaceMenu] = useState(false);
   const [isMd, setIsMd] = useState(typeof window !== 'undefined' ? window.innerWidth >= 768 : true);
 
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      navigate('/');
+    } catch (err) {
+      console.error("Error signing out:", err);
+    }
+  };
+
   useEffect(() => {
     const handleResize = () => {
       setIsMd(window.innerWidth >= 768);
@@ -31,6 +46,40 @@ export const TopNav: React.FC = () => {
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  if (isLoading) {
+    return (
+      <motion.header
+        initial={{ y: -20, opacity: 0 }}
+        animate={{ 
+          y: 0, 
+          opacity: 1,
+          left: isSidebarExpanded && isMd ? 260 : 0
+        }}
+        transition={{ 
+          left: { type: 'spring', damping: 28, stiffness: 220 },
+          y: { duration: 0.3 }
+        }}
+        className="fixed top-0 right-0 h-20 bg-black/30 border-b border-white/[0.06] backdrop-blur-md z-40 px-6 xl:px-8 flex items-center justify-between animate-pulse"
+      >
+        {/* LEFT: Toggle & Workspace placeholder */}
+        <div className="flex items-center gap-5">
+          <div className="w-8 h-8 rounded-lg bg-white/5 border border-white/5" />
+          <div className="flex flex-col gap-1.5">
+            <div className="h-2.5 w-16 bg-white/5 rounded-full" />
+            <div className="h-4 w-32 bg-white/5 rounded-full" />
+          </div>
+        </div>
+
+        {/* RIGHT: Buttons and capsules placeholder */}
+        <div className="flex items-center gap-4 xl:gap-5">
+          <div className="h-9 w-24 bg-white/5 rounded-full" />
+          <div className="h-9 w-28 bg-white/5 rounded-full" />
+          <div className="w-10 h-10 rounded-full bg-white/5" />
+        </div>
+      </motion.header>
+    );
+  }
 
   return (
     <motion.header
@@ -96,6 +145,23 @@ export const TopNav: React.FC = () => {
                   <button className="w-full text-left px-3 py-2.5 rounded-xl hover:bg-white/5 text-sm font-medium transition-all text-white/40 flex items-center gap-2">
                     <Plus className="w-4 h-4" />
                     <span>Create New Project</span>
+                  </button>
+                  <div className="h-px bg-white/5 my-1.5" />
+                  <button 
+                    onClick={() => {
+                      if (user.plan === 'Free') {
+                        useStudioStore.getState().addNotification('error', 'PAYWALL_TRIGGER', 'Inviting teammates is restricted to Pro and Business tiers. Please upgrade your workspace.');
+                        setShowPricingModal(true);
+                      } else {
+                        // Open invite modal logic
+                        useStudioStore.getState().addNotification('info', 'Invite Sent', 'Mock teammate invite sent successfully.');
+                      }
+                      setShowWorkspaceMenu(false);
+                    }}
+                    className="w-full text-left px-3 py-2.5 rounded-xl hover:bg-white/5 text-sm font-medium transition-all text-white/40 flex items-center gap-2"
+                  >
+                    <User className="w-4 h-4" />
+                    <span>Invite Teammates</span>
                   </button>
                 </motion.div>
               </>
@@ -202,7 +268,7 @@ export const TopNav: React.FC = () => {
                   <div className="h-px bg-white/5 my-1.5" />
                   
                   <button 
-                    onClick={() => navigate('/')} 
+                    onClick={handleLogout} 
                     className="w-full text-left px-3 py-2 rounded-xl hover:bg-red-500/10 text-xs text-red-400 flex items-center gap-2.5 transition-all cursor-pointer"
                   >
                     <LogOut className="w-4 h-4" />

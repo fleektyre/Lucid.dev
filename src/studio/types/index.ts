@@ -12,6 +12,7 @@ export interface User {
   credits: number;
   maxCredits: number;
   avatarUrl: string;
+  plan?: 'Free' | 'Pro' | 'Business';
 }
 
 export interface AIState {

@@ -6,8 +6,24 @@ import {
   Mail,
   ArrowRight,
   ArrowLeft,
-  X
+  X,
+  Lock,
+  Eye,
+  EyeOff
 } from 'lucide-react';
+import { 
+  GoogleAuthProvider, 
+  GithubAuthProvider,
+  signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword
+} from 'firebase/auth';
+import { doc, setDoc } from 'firebase/firestore';
+import { auth, db } from '../lib/firebase/client';
+import { useAuth, mapUserToFirestore } from '../lib/auth-service';
+import { useStudioStore } from '../studio/store/useStudioStore';
 
 // Custom high-fidelity brand SVGs for pixel-perfect aesthetics
 const GoogleIcon = () => (
@@ -25,12 +41,9 @@ const AppleIcon = () => (
   </svg>
 );
 
-const MicrosoftIcon = () => (
-  <svg className="w-5 h-5 flex-shrink-0" viewBox="0 0 23 23" xmlns="http://www.w3.org/2000/svg">
-    <path fill="#f35022" d="M1 1h10v10H1z"/>
-    <path fill="#80bb0a" d="M12 1h10v10H12z"/>
-    <path fill="#00a1f1" d="M1 12h10v10H1z"/>
-    <path fill="#ffb900" d="M12 12h10v10H12z"/>
+const GithubIcon = () => (
+  <svg className="w-5 h-5 fill-white flex-shrink-0" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+    <path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/>
   </svg>
 );
 
@@ -38,19 +51,26 @@ interface SocialButtonProps {
   icon: React.ReactNode;
   label: string;
   onClick?: () => void;
+  loading?: boolean;
 }
 
-const SocialButton = ({ icon, label, onClick }: SocialButtonProps) => (
+const SocialButton = ({ icon, label, onClick, loading }: SocialButtonProps) => (
   <button 
     type="button"
     onClick={onClick}
-    className="w-full h-13 bg-white/[0.03] border border-white/10 rounded-2xl flex items-center justify-center gap-3 hover:bg-white/5 hover:border-white/20 transition-all duration-300 cursor-pointer text-left px-6 group"
+    disabled={loading}
+    className={`w-full h-13 bg-white/[0.03] border border-white/10 rounded-2xl flex items-center justify-center gap-3 hover:bg-white/5 hover:border-white/20 transition-all duration-300 cursor-pointer text-left px-6 group ${loading ? 'opacity-50 cursor-wait' : ''}`}
   >
     <div className="flex items-center justify-center w-6">
-      {icon}
+      {loading ? (
+        <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+      ) : icon}
     </div>
     <span className="text-sm font-medium text-white/80 group-hover:text-white transition-colors flex-1">{label}</span>
-    <ArrowRight className="w-4 h-4 text-white/20 group-hover:text-white/60 group-hover:translate-x-0.5 transition-all" />
+    {!loading && <ArrowRight className="w-4 h-4 text-white/20 group-hover:text-white/60 group-hover:translate-x-0.5 transition-all" />}
   </button>
 );
 
@@ -70,19 +90,154 @@ const InputGroup = ({ icon, ...props }: InputGroupProps) => (
   </div>
 );
 
+interface PasswordInputGroupProps extends React.InputHTMLAttributes<HTMLInputElement> {
+  icon: React.ReactNode;
+}
+
+const PasswordInputGroup = ({ icon, ...props }: PasswordInputGroupProps) => {
+  const [show, setShow] = useState(false);
+  return (
+    <div className="relative w-full text-left">
+      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-white/35 z-10">
+        {icon}
+      </span>
+      <input
+        type={show ? 'text' : 'password'}
+        className="bg-white/[0.02] border border-white/10 rounded-2xl h-13 pl-12 pr-12 text-white placeholder:text-white/20 focus:outline-none focus:border-white/20 focus:ring-1 focus:ring-white/10 transition-all text-sm w-full relative z-0"
+        {...props}
+      />
+      <button
+        type="button"
+        onClick={() => setShow(!show)}
+        className="absolute right-4 top-1/2 -translate-y-1/2 text-white/35 hover:text-white/60 transition-colors z-10"
+      >
+        {show ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+      </button>
+    </div>
+  );
+};
+
 export const AuthPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { setUser } = useStudioStore();
   const [authMode, setAuthMode] = useState<'login' | 'signup'>(
     location.pathname === '/login' ? 'login' : 'signup'
   );
   const [showEmailInput, setShowEmailInput] = useState(false);
   const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [isGithubLoading, setIsGithubLoading] = useState(false);
 
-  const handleAuth = (e: React.FormEvent) => {
+  const isInIframe = typeof window !== 'undefined' && window.self !== window.top;
+
+  const { signInWithGoogle, isSandboxEnv, user, loading, error: authError } = useAuth();
+  
+  React.useEffect(() => {
+    // Only auto-redirect if the user exists and is NOT anonymous
+    if (user && !user.isAnonymous && !loading) {
+      setUser({
+        id: user.uid,
+        name: user.displayName || user.email?.split('@')[0] || 'Lucid User',
+        email: user.email || '',
+        credits: 100,
+        maxCredits: 100,
+        avatarUrl: user.photoURL || `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(user.email || 'user')}`,
+        plan: 'Free'
+      });
+      navigate('/dashboard', { replace: true });
+    }
+  }, [user, loading, navigate, setUser]);
+  
+  const handleGoogleSignIn = async () => {
+    setErrorMsg(null);
+    setIsGoogleLoading(true);
+    try {
+      await signInWithGoogle();
+    } catch (err: any) {
+      console.warn('Google Sign-In error:', err);
+    } finally {
+      setIsGoogleLoading(false);
+    }
+  };
+  
+  React.useEffect(() => {
+    if (authError) {
+      setErrorMsg('Sign-In Error: ' + (authError.message || authError));
+    }
+  }, [authError]);
+
+  const handleGithubSignIn = async () => {
+    setErrorMsg(null);
+    setIsGithubLoading(true);
+    try {
+      const provider = new GithubAuthProvider();
+      const result = await signInWithPopup(auth, provider);
+      const credential = GithubAuthProvider.credentialFromResult(result);
+      const token = credential?.accessToken;
+      await mapUserToFirestore(result.user, token || null, result.user.email);
+    } catch (error: any) {
+      console.warn('GitHub Sign-In status:', error.message || error);
+      setErrorMsg('GitHub Sign-In Error: ' + (error.message || error));
+    } finally {
+      setIsGithubLoading(false);
+    }
+  };
+
+  const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Simulate successful authentication and navigate to the dashboard
-    navigate('/dashboard');
+    if (!email || !password) {
+      setErrorMsg('Please enter both email and password.');
+      return;
+    }
+    setErrorMsg(null);
+    try {
+      let result;
+      if (authMode === 'signup') {
+        result = await createUserWithEmailAndPassword(auth, email, password);
+        // Write user details to Firestore
+        try {
+          const userRef = doc(db, 'users', result.user.uid);
+          await setDoc(userRef, {
+            email: email,
+            fullName: email.split('@')[0],
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          }, { merge: true });
+        } catch (dbErr) {
+          console.error('Failed to store email user in Firestore:', dbErr);
+        }
+      } else {
+        result = await signInWithEmailAndPassword(auth, email, password);
+      }
+
+      setUser({
+        id: result.user.uid,
+        name: result.user.email?.split('@')[0] || 'Lucid User',
+        email: result.user.email || email,
+        credits: 100,
+        maxCredits: 100,
+        avatarUrl: `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(result.user.email || email)}`,
+        plan: 'Free'
+      });
+
+      navigate('/dashboard', { replace: true });
+    } catch (error: any) {
+      console.warn('Firebase email auth error:', error);
+      let cleanMessage = error.message || error;
+      if (error.code === 'auth/email-already-in-use') {
+        cleanMessage = 'This email address is already in use. Please log in instead!';
+      } else if (error.code === 'auth/weak-password') {
+        cleanMessage = 'The password must be at least 6 characters long.';
+      } else if (error.code === 'auth/invalid-email') {
+        cleanMessage = 'Please enter a valid email address.';
+      } else if (error.code === 'auth/invalid-credential' || error.code === 'auth/wrong-password' || error.code === 'auth/user-not-found') {
+        cleanMessage = 'Invalid email or password. Please check your credentials and try again.';
+      }
+      setErrorMsg(cleanMessage);
+    }
   };
 
   const containerVariants = {
@@ -236,15 +391,36 @@ export const AuthPage = () => {
                   <span>lucid.dev</span>
                 </div>
                 <h2 className="text-3xl font-heading italic text-white tracking-normal font-light">
-                  Log in or Sign up
+                  {authMode === 'signup' ? 'Create your account' : 'Welcome back'}
                 </h2>
                 <p className="text-white/40 text-[11px] font-light max-w-xs mx-auto">
                   {showEmailInput 
-                    ? 'Enter your email address to access your studio.'
+                    ? (authMode === 'signup' ? 'Create a secure email and password to register your account.' : 'Enter your email address and password to access your studio.')
                     : 'Choose your preferred authentication method.'
                   }
                 </p>
               </div>
+
+              {/* Sleek error display without the large yellow warning sign */}
+              {errorMsg ? (
+                <div className="text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-xl p-3 text-center relative z-10 font-body">
+                  <span>{errorMsg}</span>
+                </div>
+              ) : isInIframe ? (
+                <div className="text-[11px] text-blue-400 bg-blue-500/5 border border-blue-500/15 rounded-xl p-3 flex flex-col gap-2 font-body text-left relative z-10">
+                  <span className="leading-relaxed font-light">
+                    Running inside the AI Studio preview? Browser sandbox security rules block popups. Click below to sign in with GitHub or Google seamlessly!
+                  </span>
+                  <a 
+                    href={window.location.href} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center justify-center gap-1.5 text-xs text-black font-semibold bg-white hover:bg-zinc-200 transition-all px-4 py-2 rounded-full mt-1 shadow-md text-center cursor-pointer"
+                  >
+                    Open App in New Tab
+                  </a>
+                </div>
+              ) : null}
 
               {/* Main Content Area */}
               <AnimatePresence mode="wait">
@@ -260,17 +436,19 @@ export const AuthPage = () => {
                     <SocialButton 
                       icon={<GoogleIcon />} 
                       label="Continue with Google" 
-                      onClick={() => navigate('/dashboard')}
+                      onClick={handleGoogleSignIn}
+                      loading={isGoogleLoading}
                     />
                     <SocialButton 
                       icon={<AppleIcon />} 
                       label="Continue with Apple" 
-                      onClick={() => navigate('/dashboard')}
+                      onClick={() => navigate('/dashboard', { replace: true })}
                     />
                     <SocialButton 
-                      icon={<MicrosoftIcon />} 
-                      label="Continue with Microsoft" 
-                      onClick={() => navigate('/dashboard')}
+                      icon={<GithubIcon />} 
+                      label="Continue with GitHub" 
+                      onClick={handleGithubSignIn}
+                      loading={isGithubLoading}
                     />
                     <SocialButton 
                       icon={<Mail className="w-5 h-5 text-white/70" />} 
@@ -281,7 +459,7 @@ export const AuthPage = () => {
                     <div className="pt-2 text-center">
                       <button 
                         type="button"
-                        onClick={() => navigate('/dashboard')}
+                        onClick={() => navigate('/dashboard', { replace: true })}
                         className="text-xs text-white/40 hover:text-white transition-colors underline cursor-pointer"
                       >
                         Continue with SSO
@@ -317,11 +495,19 @@ export const AuthPage = () => {
                         autoFocus
                       />
 
+                      <PasswordInputGroup 
+                        icon={<Lock className="w-4 h-4" />} 
+                        placeholder={authMode === 'signup' ? "Create a secure password" : "Enter your password"} 
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        required
+                      />
+
                       <button 
                         type="submit" 
-                        className="w-full h-13 bg-white text-black font-semibold rounded-2xl hover:bg-white/90 active:scale-[0.98] transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer text-xs font-mono uppercase tracking-widest"
+                        className="w-full h-13 bg-white text-black font-semibold rounded-2xl hover:bg-white/90 active:scale-[0.98] transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer text-xs font-mono uppercase tracking-widest mt-2"
                       >
-                        <span>Access Studio</span>
+                        <span>{authMode === 'signup' ? 'Create Account' : 'Access Studio'}</span>
                         <ArrowRight className="w-4 h-4" />
                       </button>
                     </form>
@@ -344,7 +530,6 @@ export const AuthPage = () => {
                     type="button"
                     onClick={() => {
                       setAuthMode(authMode === 'signup' ? 'login' : 'signup');
-                      setShowEmailInput(false);
                     }}
                     className="ml-1.5 text-white hover:underline font-medium cursor-pointer"
                   >

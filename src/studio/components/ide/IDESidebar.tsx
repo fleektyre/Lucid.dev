@@ -24,7 +24,7 @@ export const IDESidebar: React.FC<IDESidebarProps> = ({
   showAppSelector,
   setShowAppSelector
 }) => {
-  const { setCurrentView } = useStudioStore();
+  const { setCurrentView, setShowCreateAppModal } = useStudioStore();
 
   return (
     <aside id="ide-sidebar" className="w-[240px] bg-[#07080c] border-r border-white/[0.04] h-full flex flex-col justify-between select-none shrink-0">
@@ -38,7 +38,7 @@ export const IDESidebar: React.FC<IDESidebarProps> = ({
         {/* Create New App button */}
         <div className="px-1.5 pt-1">
           <button
-            onClick={() => alert("Creating a fresh sandboxed application blueprint in your workspace!")}
+            onClick={() => setShowCreateAppModal(true)}
             className="w-full bg-white/5 hover:bg-white/10 border border-white/[0.05] rounded-xl py-2 px-3 text-[11px] font-bold text-white transition-all flex items-center justify-center gap-2 cursor-pointer focus:outline-none"
           >
             <Sparkles className="w-3.5 h-3.5 text-blue-400" />

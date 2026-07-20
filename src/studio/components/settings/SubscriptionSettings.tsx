@@ -22,7 +22,7 @@ const creditOptions: DropdownOption[] = [
 ];
 
 export const SubscriptionSettings: React.FC<SubscriptionSettingsProps> = ({ userEmail, triggerToast }) => {
-  const { user, setPackageCredits, addNotification } = useStudioStore();
+  const { user, setPackageCredits, setPlan, addNotification } = useStudioStore();
   const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'yearly'>('monthly');
   const [selectedProOpt, setSelectedProOpt] = useState<DropdownOption>(creditOptions[0]);
   const [selectedBusOpt, setSelectedBusOpt] = useState<DropdownOption>(creditOptions[2]);
@@ -39,9 +39,12 @@ export const SubscriptionSettings: React.FC<SubscriptionSettingsProps> = ({ user
 
   const handleCheckout = (planName: string, selectedPackage: string, price: number) => {
     const amount = parseInt(selectedPackage.replace(/[^0-9]/g, ''), 10) || 100;
+    const targetPlan = planName.includes('Business') ? 'Business' : 'Pro';
+    
     triggerToast(`Routing Paystack payment gateway for ${planName} ($${price})...`);
     setTimeout(() => {
       setPackageCredits(amount);
+      setPlan(targetPlan);
       triggerToast(`Paystack subscription active: Upgraded workspace to ${planName}!`);
       addNotification(
         'billing',
@@ -111,7 +114,7 @@ export const SubscriptionSettings: React.FC<SubscriptionSettingsProps> = ({ user
             
             {/* Clean tag - reflecting real plan tier */}
             <div className="flex items-center gap-1.5 shrink-0 bg-zinc-900 border border-zinc-800 text-white px-3.5 py-1.5 rounded-full uppercase tracking-wider text-[9px] font-extrabold select-none">
-              <span>{user.maxCredits > 428 ? 'Pro Workspace' : 'Free Plan'}</span>
+              <span>{user.plan ? `${user.plan} Workspace` : 'Free Plan'}</span>
             </div>
           </div>
 

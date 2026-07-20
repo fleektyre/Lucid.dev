@@ -2,15 +2,20 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   User, Mail, Shield, Check, ChevronDown, 
-  Key, Copy, Eye, EyeOff, Save, Trash2, Sparkles
+  Key, Copy, Eye, EyeOff, Save, Trash2, Sparkles, AlertTriangle
 } from 'lucide-react';
 import { Sidebar } from '../studio/layout/Sidebar';
 import { TopNav } from '../studio/layout/TopNav';
 import { StudioBackground } from '../studio/components/StudioBackground';
 import { CelestialHorizon } from '../studio/components/CelestialHorizon';
 import { useStudioStore } from '../studio/store/useStudioStore';
+import { useNavigate } from 'react-router-dom';
+import { auth, db } from '../lib/firebase/client';
+import { doc, deleteDoc } from 'firebase/firestore';
+import { deleteUser } from 'firebase/auth';
 
 export const StudioProfilePage: React.FC = () => {
+  const navigate = useNavigate();
   const { user, setUser, isSidebarExpanded } = useStudioStore();
   const [name, setName] = useState(user.name);
   const [role, setRole] = useState('Senior SaaS Architect');
@@ -19,6 +24,11 @@ export const StudioProfilePage: React.FC = () => {
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const [revealKey, setRevealKey] = useState<string | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  // Deletion States
+  const [deleteConfirmText, setDeleteConfirmText] = useState('');
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   // General state preferences
   const [theme, setTheme] = useState<'Dark' | 'Light' | 'System'>('Dark');
@@ -34,6 +44,59 @@ export const StudioProfilePage: React.FC = () => {
   const triggerToast = (msg: string) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), 3000);
+  };
+
+  const handleDeleteAccount = async () => {
+    if (deleteConfirmText !== 'DELETE') {
+      triggerToast("Please type 'DELETE' to confirm.");
+      return;
+    }
+    
+    setIsDeleting(true);
+    triggerToast("Initiating account deletion from Firebase Cloud...");
+    
+    try {
+      const currentUser = auth.currentUser;
+      if (currentUser) {
+        // 1. Clean up Firestore document
+        const userDocRef = doc(db, 'users', currentUser.uid);
+        try {
+          await deleteDoc(userDocRef);
+        } catch (dbErr) {
+          console.warn("Could not delete user document from Firestore:", dbErr);
+        }
+        
+        // 2. Delete Auth User
+        await deleteUser(currentUser);
+      }
+      
+      // 3. Clear store state
+      setUser({
+        id: '',
+        name: '',
+        email: '',
+        credits: 0,
+        maxCredits: 0,
+        avatarUrl: '',
+        plan: 'Free'
+      });
+      
+      triggerToast("Account successfully deleted.");
+      setTimeout(() => {
+        navigate('/');
+      }, 1500);
+    } catch (err: any) {
+      console.error("Account deletion failed:", err);
+      if (err.code === 'auth/requires-recent-login') {
+        triggerToast("Authentication expired. Please log out, log back in, and try deleting your account.");
+      } else {
+        triggerToast(`Deletion failed: ${err.message || err}`);
+      }
+    } finally {
+      setIsDeleting(false);
+      setShowDeleteModal(false);
+      setDeleteConfirmText('');
+    }
   };
 
   const handleCopy = (id: string, value: string) => {
@@ -358,6 +421,68 @@ export const StudioProfilePage: React.FC = () => {
                     );
                   })}
                 </div>
+              </div>
+
+              {/* DANGER ZONE - DELETE ACCOUNT */}
+              <div className="p-6 bg-red-950/10 border border-red-900/30 rounded-[1.5rem] text-left">
+                <div className="flex items-start gap-4 mb-5">
+                  <div className="w-10 h-10 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 flex items-center justify-center shrink-0">
+                    <AlertTriangle className="w-5 h-5 animate-pulse" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-heading italic text-red-400 tracking-wide">Danger Zone</h3>
+                    <p className="text-xs text-zinc-500 mt-0.5 font-body">Permanently destroy your cloud developer identity and project database assets.</p>
+                  </div>
+                </div>
+
+                <div className="bg-[#121214]/50 border border-red-950 rounded-2xl p-4 mb-5 text-xs text-zinc-400 leading-relaxed font-body">
+                  Warning: Deleting your account is <span className="text-red-400 font-bold">permanent and irreversible</span>. 
+                  This will completely wipe your authentication state in Firebase Auth, clear all developer profile data in Firestore, 
+                  and immediately restrict all API token access. All active session logs and projects associated with this account will be deauthorized.
+                </div>
+
+                {!showDeleteModal ? (
+                  <button 
+                    onClick={() => setShowDeleteModal(true)}
+                    className="px-5 py-2.5 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 hover:border-red-500/50 text-red-400 hover:text-red-300 text-xs font-bold uppercase tracking-widest rounded-full transition-all cursor-pointer font-body"
+                  >
+                    Delete Account
+                  </button>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="flex flex-col gap-2">
+                      <label className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest font-body">
+                        Type <span className="text-white font-mono bg-zinc-900 px-1.5 py-0.5 rounded">DELETE</span> to confirm permanent deletion
+                      </label>
+                      <div className="flex gap-3 max-w-md">
+                        <input 
+                          type="text"
+                          value={deleteConfirmText}
+                          onChange={(e) => setDeleteConfirmText(e.target.value)}
+                          placeholder="Type DELETE"
+                          className="bg-zinc-950/50 border border-red-900/30 hover:border-red-900/50 focus:border-red-500/80 px-4 py-2.5 rounded-xl text-xs font-bold text-white focus:outline-none transition-all font-body flex-1"
+                          autoComplete="off"
+                        />
+                        <button 
+                          onClick={handleDeleteAccount}
+                          disabled={isDeleting}
+                          className="px-5 py-2.5 bg-red-600 hover:bg-red-700 disabled:bg-zinc-800 text-white text-xs font-bold uppercase tracking-widest rounded-xl transition-all cursor-pointer font-body shrink-0 flex items-center justify-center min-w-[120px]"
+                        >
+                          {isDeleting ? "Deleting..." : "Confirm"}
+                        </button>
+                        <button 
+                          onClick={() => {
+                            setShowDeleteModal(false);
+                            setDeleteConfirmText('');
+                          }}
+                          className="px-4 py-2.5 bg-zinc-900 hover:bg-zinc-850 text-zinc-400 hover:text-white text-xs font-bold uppercase tracking-widest rounded-xl transition-all cursor-pointer font-body"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
 
             </div>

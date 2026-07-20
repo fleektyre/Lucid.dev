@@ -16,8 +16,12 @@ import {
 } from 'lucide-react';
 import { useStudioStore } from '../store/useStudioStore';
 
-export const AllAppsView: React.FC = () => {
-  const { addNotification, setCurrentView } = useStudioStore();
+export interface AllAppsViewProps {
+  isLoading?: boolean;
+}
+
+export const AllAppsView: React.FC<AllAppsViewProps> = ({ isLoading = false }) => {
+  const { addNotification, setCurrentView, setShowCreateAppModal } = useStudioStore();
   
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -90,8 +94,53 @@ export const AllAppsView: React.FC = () => {
       'App Synthesis Started',
       'Initializing a fresh sandboxed application blueprint in your workspace environment.'
     );
-    setCurrentView('chat');
+    setShowCreateAppModal(true);
   };
+
+  if (isLoading) {
+    return (
+      <div className="w-full flex flex-col gap-6 animate-fadeIn font-sans text-zinc-300 max-w-[950px] mx-auto select-none animate-pulse">
+        {/* Header Block with Title & Actions */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-white/[0.04] pb-6">
+          <div>
+            <div className="h-8 w-40 bg-white/5 rounded-lg mb-2" />
+            <div className="h-4 w-72 bg-white/5 rounded-full" />
+          </div>
+          <div className="h-10 w-36 bg-white/5 rounded-full" />
+        </div>
+
+        {/* Control Bar Skeleton */}
+        <div className="flex flex-wrap items-center justify-between gap-3 bg-zinc-950/40 border border-zinc-900/60 p-3 rounded-2xl">
+          <div className="flex flex-wrap items-center gap-2.5 flex-1 min-w-[280px]">
+            <div className="h-9 w-48 bg-white/5 rounded-xl" />
+            <div className="h-9 w-28 bg-white/5 rounded-xl" />
+            <div className="h-9 w-24 bg-white/5 rounded-xl" />
+            <div className="h-9 w-28 bg-white/5 rounded-xl" />
+          </div>
+          <div className="flex gap-2.5">
+            <div className="w-9 h-9 bg-white/5 rounded-xl" />
+            <div className="w-9 h-9 bg-white/5 rounded-xl" />
+          </div>
+        </div>
+
+        {/* Grid of Apps Skeleton */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-2">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="bg-zinc-900/40 border border-white/[0.04] rounded-[24px] p-4 flex flex-col gap-4">
+              <div className="w-full aspect-[4/3] bg-white/5 rounded-[20px]" />
+              <div className="flex flex-col gap-2 px-1">
+                <div className="h-4 w-2/3 bg-white/5 rounded-full" />
+                <div className="flex items-center justify-between mt-1">
+                  <div className="h-3.5 w-24 bg-white/5 rounded-full" />
+                  <div className="h-5 w-16 bg-white/5 rounded-full" />
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full flex flex-col gap-6 animate-fadeIn font-sans text-zinc-300 max-w-[950px] mx-auto select-none">

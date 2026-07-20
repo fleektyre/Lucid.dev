@@ -16,8 +16,14 @@ import {
 import { useStudioStore } from '../store/useStudioStore';
 import { useNavigate } from 'react-router-dom';
 import { LucidLogo } from '../../components/LucidLogo';
+import { auth } from '../../lib/firebase/client';
+import { signOut } from 'firebase/auth';
 
-export const Sidebar: React.FC = () => {
+export interface SidebarProps {
+  isLoading?: boolean;
+}
+
+export const Sidebar: React.FC<SidebarProps> = ({ isLoading = false }) => {
   const navigate = useNavigate();
   const { 
     user, 
@@ -26,7 +32,8 @@ export const Sidebar: React.FC = () => {
     setCurrentView,
     setActiveSettingsTab,
     showSettingsModal,
-    setShowSettingsModal
+    setShowSettingsModal,
+    setShowCreateAppModal
   } = useStudioStore();
 
   const [activeItem, setActiveItem] = useState<'home' | 'all_apps' | 'integrations'>('home');
@@ -34,6 +41,15 @@ export const Sidebar: React.FC = () => {
   const [showAppDropdown, setShowAppDropdown] = useState(false);
   const [selectedApp, setSelectedApp] = useState<string | null>(null);
   const [showFavorites, setShowFavorites] = useState(true);
+
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      navigate('/');
+    } catch (err) {
+      console.error("Error signing out:", err);
+    }
+  };
 
   // Sync active item when currentView shifts globally
   React.useEffect(() => {
@@ -46,7 +62,12 @@ export const Sidebar: React.FC = () => {
 
   // Custom action triggers
   const handleCreateNewApp = () => {
-    setCurrentView('chat');
+    if (currentView !== 'chat' || showSettingsModal) {
+      setShowSettingsModal(false);
+      setShowCreateAppModal(true);
+    } else {
+      setCurrentView('chat');
+    }
   };
 
   const handleSelectAppClick = () => {
@@ -65,6 +86,59 @@ export const Sidebar: React.FC = () => {
     setShowSettingsModal(true);
     setActiveSettingsTab('general');
   };
+
+  if (isLoading) {
+    return (
+      <motion.aside
+        initial={{ x: -260 }}
+        animate={{ x: isSidebarExpanded ? 0 : -260 }}
+        transition={{ type: 'spring', damping: 28, stiffness: 220 }}
+        className="fixed left-0 top-0 bottom-0 w-[260px] bg-[#070709]/75 border-r border-white/[0.06] backdrop-blur-xl z-50 flex flex-col justify-between p-5 select-none text-white/90 font-body animate-pulse"
+      >
+        <div className="flex flex-col gap-4">
+          {/* Logo Section */}
+          <div className="pb-2 border-b border-white/[0.04] flex justify-start">
+            <LucidLogo />
+          </div>
+
+          {/* Create new app button placeholder */}
+          <div className="pt-2">
+            <div className="w-full h-10 bg-white/5 rounded-full" />
+          </div>
+
+          {/* Select an app placeholder */}
+          <div className="h-9 bg-white/5 rounded-xl mt-1" />
+
+          {/* Nav Items Placeholders */}
+          <div className="flex flex-col gap-2.5 mt-4">
+            <div className="h-8 bg-white/5 rounded-xl w-5/6" />
+            <div className="h-8 bg-white/5 rounded-xl w-11/12" />
+            <div className="h-8 bg-white/5 rounded-xl w-3/4" />
+          </div>
+
+          {/* Favorites Header and List */}
+          <div className="flex flex-col gap-1.5 mt-4">
+            <div className="h-4 w-16 bg-white/5 rounded-full ml-3" />
+            <div className="h-6 w-24 bg-white/[0.02] rounded-lg ml-3 mt-1" />
+          </div>
+        </div>
+
+        {/* Bottom Section */}
+        <div className="flex flex-col gap-5">
+          <div className="flex flex-col gap-2">
+            <div className="h-7 w-2/3 bg-white/5 rounded-xl ml-3" />
+            <div className="h-7 w-1/2 bg-white/5 rounded-xl ml-3" />
+          </div>
+
+          {/* Organization labels */}
+          <div className="flex flex-col gap-2 border-t border-white/[0.06] pt-4">
+            <div className="h-3 w-20 bg-white/5 rounded-full ml-3" />
+            <div className="h-11 bg-white/5 rounded-[14px] mt-1" />
+          </div>
+        </div>
+      </motion.aside>
+    );
+  }
 
   return (
     <motion.aside
@@ -357,7 +431,7 @@ export const Sidebar: React.FC = () => {
 
                     {/* Logout Option */}
                     <button
-                      onClick={() => navigate('/')}
+                      onClick={handleLogout}
                       className="w-full flex items-center gap-2.5 px-3 py-1 text-white/60 hover:text-red-400 hover:bg-red-500/10 rounded-xl text-xs font-bold transition-all cursor-pointer focus:outline-none text-left"
                     >
                       <LogOut className="w-4 h-4 text-white/40 shrink-0" />

@@ -83,6 +83,40 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
   const [paystackSec, setPaystackSec] = useState('sk_sandbox_88f921ea0283c847');
   const [requirePay, setRequirePay] = useState(true);
 
+  // Profile image & Org logo upload states and refs
+  const profileImageInputRef = React.useRef<HTMLInputElement>(null);
+  const orgLogoInputRef = React.useRef<HTMLInputElement>(null);
+  const [profileImg, setProfileImg] = useState<string | null>(null);
+  const [orgLogoImg, setOrgLogoImg] = useState<string | null>(null);
+
+  const handleProfileImgChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        if (event.target?.result) {
+          setProfileImg(event.target.result as string);
+          triggerToast('Profile image uploaded successfully');
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleOrgLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        if (event.target?.result) {
+          setOrgLogoImg(event.target.result as string);
+          triggerToast('Organization logo uploaded successfully');
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   // Profile state
   const [profileName, setProfileName] = useState('Nwuba Joshua');
   const [profileEmail, setProfileEmail] = useState('nwuba.joshua@gmail.com');
@@ -154,8 +188,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
     { id: 'teammates', label: 'Teammates', icon: Users, section: 'Organization' },
     { id: 'sso', label: 'SSO', icon: Shield, section: 'Organization' },
     { id: 'cloud', label: 'Data residency', icon: Server, section: 'Organization' },
-    { id: 'commerce', label: 'Commerce', icon: DollarSign, section: 'Organization' },
-    { id: 'addons', label: 'Skills', icon: Wand2, section: 'Organization' },
 
     // Personal Group
     { id: 'profile', label: 'Profile', icon: UserIcon, section: 'Personal' },
@@ -310,11 +342,28 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
                           </span>
                         </div>
                         <div className="flex items-center gap-4">
-                          <div className="w-12 h-12 rounded-xl bg-zinc-900 border border-zinc-800 text-white/80 text-sm font-bold flex items-center justify-center shrink-0">
-                            N
-                          </div>
+                          {orgLogoImg ? (
+                            <img 
+                              src={orgLogoImg} 
+                              alt="Organization Logo" 
+                              className="w-12 h-12 rounded-xl object-cover border border-zinc-800 shrink-0"
+                              referrerPolicy="no-referrer"
+                            />
+                          ) : (
+                            <div className="w-12 h-12 rounded-xl bg-zinc-900 border border-zinc-800 text-white/80 text-sm font-bold flex items-center justify-center shrink-0">
+                              N
+                            </div>
+                          )}
+                          <input 
+                            type="file" 
+                            ref={orgLogoInputRef} 
+                            onChange={handleOrgLogoChange} 
+                            accept="image/*" 
+                            className="hidden" 
+                          />
                           <button 
-                            onClick={() => triggerToast('Select branding logo...')}
+                            type="button"
+                            onClick={() => orgLogoInputRef.current?.click()}
                             className="px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/5 text-white text-xs font-bold rounded-full transition-all flex items-center gap-2 cursor-pointer focus:outline-none"
                           >
                             <Upload className="w-3.5 h-3.5" />
@@ -421,220 +470,341 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
 
                 {/* Teammates Tab */}
                 {activeSettingsTab === 'teammates' && (
-                  <div className="flex flex-col gap-8 animate-fadeIn font-sans text-zinc-300">
-                    <div>
-                      <h2 className="text-2xl font-bold text-white tracking-tight">Teammates</h2>
-                      <p className="text-xs text-zinc-400 mt-1">
-                        Control authorization matrices, add contributors, or re-route workspace quotas.
-                      </p>
-                    </div>
-
-                    {/* Invite new teammate form */}
-                    <form onSubmit={handleAddTeammate} className="p-6 bg-zinc-950/40 border border-zinc-900 rounded-2xl flex flex-col gap-4">
-                      <h3 className="text-xs font-bold uppercase tracking-wider text-white">Invite Teammate</h3>
-                      <div className="flex flex-col sm:flex-row gap-4">
-                        <div className="flex-1 flex flex-col gap-1.5">
-                          <label className="text-[10px] text-zinc-550 font-bold uppercase tracking-wide">Contributor Email</label>
-                          <input 
-                            type="email" 
-                            placeholder="teammate@example.com"
-                            value={newTeammateEmail}
-                            onChange={(e) => setNewTeammateEmail(e.target.value)}
-                            className="bg-zinc-950 border border-zinc-900 focus:border-zinc-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:ring-0 placeholder-zinc-800 font-sans"
-                            required
-                          />
-                        </div>
-                        <div className="w-full sm:w-40 flex flex-col gap-1.5">
-                          <label className="text-[10px] text-zinc-550 font-bold uppercase tracking-wide">Role Quota</label>
-                          <select
-                            value={newTeammateRole}
-                            onChange={(e) => setNewTeammateRole(e.target.value)}
-                            className="bg-zinc-950 border border-zinc-900 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none font-sans"
-                          >
-                            <option value="Admin">Admin</option>
-                            <option value="Member">Member</option>
-                            <option value="Viewer">Viewer</option>
-                          </select>
-                        </div>
+                  user.plan === 'Pro' || user.plan === 'Business' ? (
+                    <div className="flex flex-col gap-8 animate-fadeIn font-sans text-zinc-300">
+                      <div>
+                        <h2 className="text-2xl font-bold text-white tracking-tight">Teammates</h2>
+                        <p className="text-xs text-zinc-400 mt-1">
+                          Control authorization matrices, add contributors, or re-route workspace quotas.
+                        </p>
                       </div>
-                      <button
-                        type="submit"
-                        className="self-end px-5 py-2.5 bg-white hover:bg-zinc-100 text-black text-xs font-bold rounded-xl transition-all cursor-pointer focus:outline-none flex items-center gap-1.5"
-                      >
-                        <Plus className="w-4 h-4 text-black" />
-                        <span>Send Invitation</span>
-                      </button>
-                    </form>
 
-                    {/* Active list */}
-                    <div className="flex flex-col gap-3">
-                      <h3 className="text-xs font-bold uppercase tracking-wider text-white px-1">Active Team Members ({teammates.length})</h3>
-                      <div className="flex flex-col gap-2">
-                        {teammates.map((member) => (
-                          <div 
-                            key={member.email} 
-                            className="p-4 bg-zinc-950/20 border border-zinc-900 rounded-xl flex items-center justify-between gap-4"
-                          >
-                            <div className="flex items-center gap-3 min-w-0">
-                              <div className="w-9 h-9 rounded-lg bg-zinc-900 border border-zinc-800/80 text-white/90 text-xs font-bold flex items-center justify-center shrink-0">
-                                {member.name.charAt(0)}
-                              </div>
-                              <div className="flex flex-col text-left min-w-0">
-                                <span className="text-xs font-bold text-white truncate">{member.name}</span>
-                                <span className="text-[10px] text-zinc-550 font-mono truncate">{member.email}</span>
-                              </div>
-                            </div>
-
-                            <div className="flex items-center gap-4 shrink-0">
-                              <span className="text-[10px] font-bold text-zinc-400 bg-zinc-950 border border-zinc-900 px-2 py-1 rounded-md">
-                                {member.role}
-                              </span>
-                              <span className={`text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border
-                                ${member.status === 'Active' 
-                                  ? 'bg-emerald-500/5 text-emerald-400 border-emerald-500/10' 
-                                  : 'bg-amber-500/5 text-amber-400 border-amber-500/10'
-                                }
-                              `}>
-                                {member.status}
-                              </span>
-                              {member.role !== 'Owner' && (
-                                <button
-                                  onClick={() => handleRemoveTeammate(member.email)}
-                                  className="p-1.5 text-zinc-700 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all"
-                                  title="Revoke and delete"
-                                >
-                                  <Trash2 className="w-3.5 h-3.5" />
-                                </button>
-                              )}
-                            </div>
+                      {/* Invite new teammate form */}
+                      <form onSubmit={handleAddTeammate} className="p-6 bg-zinc-950/40 border border-zinc-900 rounded-2xl flex flex-col gap-4">
+                        <h3 className="text-xs font-bold uppercase tracking-wider text-white">Invite Teammate</h3>
+                        <div className="flex flex-col sm:flex-row gap-4">
+                          <div className="flex-1 flex flex-col gap-1.5">
+                            <label className="text-[10px] text-zinc-550 font-bold uppercase tracking-wide">Contributor Email</label>
+                            <input 
+                              type="email" 
+                              placeholder="teammate@example.com"
+                              value={newTeammateEmail}
+                              onChange={(e) => setNewTeammateEmail(e.target.value)}
+                              className="bg-zinc-950 border border-zinc-900 focus:border-zinc-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:ring-0 placeholder-zinc-800 font-sans"
+                              required
+                            />
                           </div>
-                        ))}
+                          <div className="w-full sm:w-40 flex flex-col gap-1.5">
+                            <label className="text-[10px] text-zinc-550 font-bold uppercase tracking-wide">Role Quota</label>
+                            <select
+                              value={newTeammateRole}
+                              onChange={(e) => setNewTeammateRole(e.target.value)}
+                              className="bg-zinc-950 border border-zinc-900 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none font-sans"
+                            >
+                              <option value="Admin">Admin</option>
+                              <option value="Member">Member</option>
+                              <option value="Viewer">Viewer</option>
+                            </select>
+                          </div>
+                        </div>
+                        <button
+                          type="submit"
+                          className="self-end px-5 py-2.5 bg-white hover:bg-zinc-100 text-black text-xs font-bold rounded-xl transition-all cursor-pointer focus:outline-none flex items-center gap-1.5"
+                        >
+                          <Plus className="w-4 h-4 text-black" />
+                          <span>Send Invitation</span>
+                        </button>
+                      </form>
+
+                      {/* Active list */}
+                      <div className="flex flex-col gap-3">
+                        <h3 className="text-xs font-bold uppercase tracking-wider text-white px-1">Active Team Members ({teammates.length})</h3>
+                        <div className="flex flex-col gap-2">
+                          {teammates.map((member) => (
+                            <div 
+                              key={member.email} 
+                              className="p-4 bg-zinc-950/20 border border-zinc-900 rounded-xl flex items-center justify-between gap-4"
+                            >
+                              <div className="flex items-center gap-3 min-w-0">
+                                <div className="w-9 h-9 rounded-lg bg-zinc-900 border border-zinc-800/80 text-white/90 text-xs font-bold flex items-center justify-center shrink-0">
+                                  {member.name.charAt(0)}
+                                </div>
+                                <div className="flex flex-col text-left min-w-0">
+                                  <span className="text-xs font-bold text-white truncate">{member.name}</span>
+                                  <span className="text-[10px] text-zinc-550 font-mono truncate">{member.email}</span>
+                                </div>
+                              </div>
+
+                              <div className="flex items-center gap-4 shrink-0">
+                                <span className="text-[10px] font-bold text-zinc-400 bg-zinc-950 border border-zinc-900 px-2 py-1 rounded-md">
+                                  {member.role}
+                                </span>
+                                <span className={`text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border
+                                  ${member.status === 'Active' 
+                                    ? 'bg-emerald-500/5 text-emerald-400 border-emerald-500/10' 
+                                    : 'bg-amber-500/5 text-amber-400 border-amber-500/10'
+                                  }
+                                `}>
+                                  {member.status}
+                                </span>
+                                {member.role !== 'Owner' && (
+                                  <button
+                                    onClick={() => handleRemoveTeammate(member.email)}
+                                    className="p-1.5 text-zinc-700 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all"
+                                    title="Revoke and delete"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
                       </div>
                     </div>
-                  </div>
+                  ) : (
+                    <div className="flex flex-col gap-6 animate-fadeIn font-sans text-zinc-300">
+                      <div>
+                        <h2 className="text-2xl font-bold text-white tracking-tight">Teammates</h2>
+                        <p className="text-xs text-zinc-400 mt-1">
+                          Control authorization matrices, add contributors, or re-route workspace quotas.
+                        </p>
+                      </div>
+
+                      <div className="w-full border border-dashed border-zinc-800 rounded-[2rem] bg-[#070709]/20 flex flex-col items-center justify-center p-8 py-16 md:py-20 text-center gap-5">
+                        <div className="w-14 h-14 rounded-2xl bg-zinc-900/60 border border-zinc-800 flex items-center justify-center text-zinc-400">
+                          <Users className="w-7 h-7 text-zinc-400" />
+                        </div>
+
+                        <div className="flex flex-col sm:flex-row items-center gap-2.5 mt-2">
+                          <h3 className="text-base md:text-lg font-bold text-white tracking-tight">
+                            Collaborative pipelines are locked
+                          </h3>
+                          <div className="inline-flex items-center gap-1 px-3 py-0.5 rounded-full text-[11px] font-semibold bg-sky-500/10 text-sky-400 border border-sky-500/20">
+                            <Gem className="w-3 h-3 text-sky-400" />
+                            <span>Pro / Business</span>
+                          </div>
+                        </div>
+
+                        <p className="text-xs md:text-sm text-zinc-400 max-w-lg leading-relaxed px-4">
+                          Invite contributors, assign role-based quotas, and compile pipelines synchronously with your team in shared workspaces.
+                        </p>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            triggerToast('Redirecting to subscription settings.');
+                            setActiveSettingsTab('subscription');
+                          }}
+                          className="mt-3 px-6 py-2.5 bg-white hover:bg-zinc-100 text-black text-xs font-bold rounded-full transition-all cursor-pointer shadow-lg hover:scale-[1.02] active:scale-[0.98] focus:outline-none"
+                        >
+                          Upgrade Workspace
+                        </button>
+                      </div>
+                    </div>
+                  )
                 )}
 
                 {/* SSO Tab */}
                 {activeSettingsTab === 'sso' && (
-                  <div className="flex flex-col gap-6 animate-fadeIn font-sans text-zinc-300">
-                    <div>
-                      <h2 className="text-2xl font-bold text-white tracking-tight">Single Sign-On</h2>
-                    </div>
-
-                    <div className="w-full border border-dashed border-zinc-800 rounded-[2rem] bg-[#070709]/20 flex flex-col items-center justify-center p-8 py-16 md:py-24 text-center gap-5">
-                      
-                      {/* Shield Icon Badge */}
-                      <div className="w-14 h-14 rounded-2xl bg-zinc-900/60 border border-zinc-800 flex items-center justify-center text-zinc-400">
-                        <Shield className="w-7 h-7 text-zinc-400" />
-                      </div>
-
-                      {/* Header + Business Pill Row */}
-                      <div className="flex flex-col sm:flex-row items-center gap-2.5 mt-2">
-                        <h3 className="text-base md:text-lg font-bold text-white tracking-tight">
-                          No identity providers configured
-                        </h3>
-                        <div className="inline-flex items-center gap-1 px-3 py-0.5 rounded-full text-[11px] font-semibold bg-violet-500/10 text-violet-400 border border-violet-500/20">
-                          <Gem className="w-3 h-3 text-violet-400" />
-                          <span>Business</span>
+                  user.plan === 'Business' ? (
+                    <div className="flex flex-col gap-6 animate-fadeIn font-sans text-zinc-300">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h2 className="text-2xl font-bold text-white tracking-tight">Single Sign-On (SSO)</h2>
+                          <p className="text-xs text-zinc-400 mt-1">
+                            Manage organization identity providers and secure login parameters.
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-1.5 uppercase tracking-widest text-[9px] font-black bg-emerald-500/5 border border-emerald-500/10 text-emerald-400 px-3.5 py-1.5 rounded-full">
+                          <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                          <span>Enabled</span>
                         </div>
                       </div>
 
-                      {/* Explanation Description */}
-                      <p className="text-xs md:text-sm text-zinc-400 max-w-lg leading-relaxed px-4">
-                        Single sign-on lets your team sign in using your organization's identity provider like Google Workspace, Okta, or Microsoft Entra ID.
-                      </p>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div className="md:col-span-2 p-6 bg-zinc-950/40 border border-zinc-900 rounded-[1.5rem] flex flex-col gap-5">
+                          <h3 className="text-sm font-bold text-white">Active Connection Details</h3>
+                          
+                          <div className="flex flex-col gap-1.5">
+                            <span className="text-[10px] text-zinc-550 font-bold uppercase tracking-wider">Identity Provider</span>
+                            <div className="bg-zinc-950 border border-zinc-900 rounded-xl px-4 py-3 text-xs text-zinc-300 flex items-center justify-between">
+                              <span className="font-semibold text-white">Okta Enterprise IDP</span>
+                              <span className="text-[10px] bg-zinc-900 border border-zinc-800 text-zinc-400 px-2.5 py-0.5 rounded font-mono">SAML 2.0</span>
+                            </div>
+                          </div>
 
-                      {/* CTA Upgrade Button */}
-                      <button
-                        type="button"
-                        onClick={() => {
-                          triggerToast('Upgrade flow initiated! Redirecting to billing.');
-                          addNotification('billing', 'Upgrade Requested', 'Upgrade to Single Sign-On Business plan initiated.');
-                          setActiveSettingsTab('subscription');
-                        }}
-                        className="mt-3 px-6 py-2.5 bg-white hover:bg-zinc-100 text-black text-xs font-bold rounded-full transition-all cursor-pointer shadow-lg hover:scale-[1.02] active:scale-[0.98] focus:outline-none"
-                      >
-                        Upgrade to Business
-                      </button>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div className="flex flex-col gap-1.5">
+                              <span className="text-[10px] text-zinc-550 font-bold uppercase tracking-wider">Entity ID</span>
+                              <div className="bg-zinc-950 border border-zinc-900 rounded-xl px-4 py-3 text-xs text-zinc-300 font-mono truncate">
+                                lucid-dev-idp-okta-83f
+                              </div>
+                            </div>
+                            <div className="flex flex-col gap-1.5">
+                              <span className="text-[10px] text-zinc-550 font-bold uppercase tracking-wider">SAML Single Sign-On URL</span>
+                              <div className="bg-zinc-950 border border-zinc-900 rounded-xl px-4 py-3 text-xs text-zinc-300 font-mono truncate">
+                                https://okta.lucid.dev/sso/saml2
+                              </div>
+                            </div>
+                          </div>
 
+                          <div className="flex flex-col gap-1.5">
+                            <span className="text-[10px] text-zinc-550 font-bold uppercase tracking-wider">X.509 Certificate (SHA-256 Fingerprint)</span>
+                            <div className="bg-zinc-950 border border-zinc-900 rounded-xl px-4 py-3 text-xs text-zinc-450 font-mono truncate">
+                              9A:BC:D1:EF:23:45:67:89:FE:DC:BA:09:87:65:43:21:0A:BC:DE:F0
+                            </div>
+                          </div>
+
+                          <div className="flex items-center justify-between py-2 border-t border-zinc-900 mt-1">
+                            <div className="flex flex-col gap-0.5 max-w-[70%]">
+                              <span className="text-xs font-bold text-zinc-200">Enforce SAML SSO for team members</span>
+                              <span className="text-[11px] text-zinc-550">
+                                Forces all non-admin organization users to sign in exclusively via Okta.
+                              </span>
+                            </div>
+                            <button 
+                              type="button"
+                              onClick={() => triggerToast('Toggled SAML enforcement')}
+                              className="w-12 h-6 rounded-full p-0.5 transition-colors duration-300 cursor-pointer bg-white"
+                            >
+                              <div className="w-5 h-5 rounded-full bg-black transition-transform duration-300 transform translate-x-6" />
+                            </button>
+                          </div>
+
+                          <div className="flex items-center justify-end gap-3 border-t border-zinc-900 pt-3">
+                            <button 
+                              type="button"
+                              onClick={() => triggerToast('SAML SSO connection test initiated... success!')}
+                              className="px-4.5 py-2 border border-zinc-850 hover:border-zinc-800 text-xs font-bold rounded-xl transition-all hover:text-white cursor-pointer bg-transparent"
+                            >
+                              Test Connection
+                            </button>
+                            <button 
+                              type="button"
+                              onClick={() => triggerToast('SSO configurations saved')}
+                              className="px-4.5 py-2 bg-white text-black hover:bg-zinc-100 text-xs font-bold rounded-xl transition-all cursor-pointer"
+                            >
+                              Save Settings
+                            </button>
+                          </div>
+                        </div>
+
+                        <div className="p-6 bg-zinc-950/40 border border-zinc-900 rounded-[1.5rem] flex flex-col gap-5 justify-between">
+                          <div className="flex flex-col gap-4">
+                            <h3 className="text-sm font-bold text-white">Provisioning (SCIM)</h3>
+                            <p className="text-xs text-zinc-550 leading-relaxed font-sans">
+                              Automate teammate onboarding/offboarding by linking your identity provider directory.
+                            </p>
+                            <div className="p-3.5 bg-zinc-950 border border-zinc-900 rounded-xl flex items-center justify-between gap-3 text-xs">
+                              <span className="text-zinc-400 font-sans">SCIM Connector URL</span>
+                              <span className="text-zinc-600 font-mono text-[10px]">https://scim.lucid.dev/v2</span>
+                            </div>
+                          </div>
+                          <button 
+                            type="button"
+                            onClick={() => triggerToast('SCIM directory synchronization triggered successfully')}
+                            className="w-full py-2.5 rounded-xl border border-zinc-800 hover:border-zinc-750 hover:bg-zinc-900/40 text-xs font-bold text-zinc-300 transition-all text-center cursor-pointer bg-transparent"
+                          >
+                            Sync Directory Now
+                          </button>
+                        </div>
+                      </div>
                     </div>
-                  </div>
+                  ) : (
+                    <div className="flex flex-col gap-6 animate-fadeIn font-sans text-zinc-300">
+                      <div>
+                        <h2 className="text-2xl font-bold text-white tracking-tight">Single Sign-On</h2>
+                      </div>
+
+                      <div className="w-full border border-dashed border-zinc-800 rounded-[2rem] bg-[#070709]/20 flex flex-col items-center justify-center p-8 py-16 md:py-24 text-center gap-5">
+                        
+                        {/* Shield Icon Badge */}
+                        <div className="w-14 h-14 rounded-2xl bg-zinc-900/60 border border-zinc-800 flex items-center justify-center text-zinc-400">
+                          <Shield className="w-7 h-7 text-zinc-400" />
+                        </div>
+
+                        {/* Header + Business Pill Row */}
+                        <div className="flex flex-col sm:flex-row items-center gap-2.5 mt-2">
+                          <h3 className="text-base md:text-lg font-bold text-white tracking-tight">
+                            No identity providers configured
+                          </h3>
+                          <div className="inline-flex items-center gap-1 px-3 py-0.5 rounded-full text-[11px] font-semibold bg-violet-500/10 text-violet-400 border border-violet-500/20">
+                            <Gem className="w-3 h-3 text-violet-400" />
+                            <span>Business</span>
+                          </div>
+                        </div>
+
+                        {/* Explanation Description */}
+                        <p className="text-xs md:text-sm text-zinc-400 max-w-lg leading-relaxed px-4">
+                          Single sign-on lets your team sign in using your organization's identity provider like Google Workspace, Okta, or Microsoft Entra ID.
+                        </p>
+
+                        {/* CTA Upgrade Button */}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            triggerToast('Upgrade flow initiated! Redirecting to billing.');
+                            addNotification('billing', 'Upgrade Requested', 'Upgrade to Single Sign-On Business plan initiated.');
+                            setActiveSettingsTab('subscription');
+                          }}
+                          className="mt-3 px-6 py-2.5 bg-white hover:bg-zinc-100 text-black text-xs font-bold rounded-full transition-all cursor-pointer shadow-lg hover:scale-[1.02] active:scale-[0.98] focus:outline-none"
+                        >
+                          Upgrade to Business
+                        </button>
+
+                      </div>
+                    </div>
+                  )
                 )}
 
                 {/* Data residency Tab */}
                 {activeSettingsTab === 'cloud' && (
-                  <div className="animate-fadeIn">
-                    <CloudSettings triggerToast={triggerToast} />
-                  </div>
-                )}
-
-                {/* Commerce Tab */}
-                {activeSettingsTab === 'commerce' && (
-                  <div className="flex flex-col gap-8 animate-fadeIn font-sans text-zinc-300">
-                    <div>
-                      <h2 className="text-2xl font-bold text-white tracking-tight">Commerce & Payments</h2>
-                      <p className="text-xs text-zinc-400 mt-1">
-                        Configure Paystack sandbox connections and billing triggers.
-                      </p>
+                  user.plan === 'Pro' || user.plan === 'Business' ? (
+                    <div className="animate-fadeIn">
+                      <CloudSettings triggerToast={triggerToast} />
                     </div>
-
-                    <div className="p-6 bg-zinc-950/40 border border-zinc-900 rounded-2xl flex flex-col gap-5">
-                      <div className="flex flex-col gap-1.5">
-                        <label className="text-[10px] text-zinc-550 font-bold uppercase tracking-wide flex items-center gap-1">
-                          <Key className="w-3.5 h-3.5 text-zinc-600" />
-                          <span>Paystack Public Key (Sandbox)</span>
-                        </label>
-                        <input 
-                          type="text" 
-                          value={paystackPub}
-                          onChange={(e) => setPaystackPub(e.target.value)}
-                          className="bg-zinc-950 border border-zinc-900 focus:border-zinc-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none font-mono"
-                        />
+                  ) : (
+                    <div className="flex flex-col gap-6 animate-fadeIn font-sans text-zinc-300">
+                      <div>
+                        <h2 className="text-2xl font-bold text-white tracking-tight">Cloud Infrastructure</h2>
+                        <p className="text-xs text-zinc-400 mt-1">
+                          Monitor your active server telemetry logs or deploy custom Docker sandbox runtimes.
+                        </p>
                       </div>
 
-                      <div className="flex flex-col gap-1.5">
-                        <label className="text-[10px] text-zinc-550 font-bold uppercase tracking-wide flex items-center gap-1">
-                          <Key className="w-3.5 h-3.5 text-zinc-600" />
-                          <span>Paystack Secret Key (Sandbox)</span>
-                        </label>
-                        <input 
-                          type="password" 
-                          value={paystackSec}
-                          onChange={(e) => setPaystackSec(e.target.value)}
-                          className="bg-zinc-950 border border-zinc-900 focus:border-zinc-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none font-mono"
-                        />
-                      </div>
-
-                      <div className="flex items-center justify-between py-2 border-t border-zinc-900 mt-1">
-                        <div className="flex flex-col gap-0.5 max-w-[70%]">
-                          <span className="text-sm font-semibold text-zinc-200">Require active credit deposit</span>
-                          <span className="text-xs text-zinc-500">
-                            Prevents prompt generation and pipeline compiling if user has 0 available credits.
-                          </span>
+                      <div className="w-full border border-dashed border-zinc-800 rounded-[2rem] bg-[#070709]/20 flex flex-col items-center justify-center p-8 py-16 md:py-20 text-center gap-5">
+                        <div className="w-14 h-14 rounded-2xl bg-zinc-900/60 border border-zinc-800 flex items-center justify-center text-zinc-400">
+                          <Server className="w-7 h-7 text-zinc-400" />
                         </div>
-                        <button 
-                          onClick={() => setRequirePay(!requirePay)}
-                          className={`w-12 h-6 rounded-full p-0.5 transition-colors duration-300 cursor-pointer ${requirePay ? 'bg-white' : 'bg-zinc-800'}`}
+
+                        <div className="flex flex-col sm:flex-row items-center gap-2.5 mt-2">
+                          <h3 className="text-base md:text-lg font-bold text-white tracking-tight">
+                            Private compilation nodes are locked
+                          </h3>
+                          <div className="inline-flex items-center gap-1 px-3 py-0.5 rounded-full text-[11px] font-semibold bg-sky-500/10 text-sky-400 border border-sky-500/20">
+                            <Gem className="w-3 h-3 text-sky-400" />
+                            <span>Pro / Business</span>
+                          </div>
+                        </div>
+
+                        <p className="text-xs md:text-sm text-zinc-400 max-w-lg leading-relaxed px-4">
+                          Unlock primary compilation routing region selections, hardware-accelerated rendering, and private container sandbox runtimes.
+                        </p>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            triggerToast('Redirecting to subscription settings.');
+                            setActiveSettingsTab('subscription');
+                          }}
+                          className="mt-3 px-6 py-2.5 bg-white hover:bg-zinc-100 text-black text-xs font-bold rounded-full transition-all cursor-pointer shadow-lg hover:scale-[1.02] active:scale-[0.98] focus:outline-none"
                         >
-                          <div className={`w-5 h-5 rounded-full bg-black transition-transform duration-300 transform ${requirePay ? 'translate-x-6' : 'translate-x-0'}`} />
+                          Upgrade Workspace
                         </button>
                       </div>
-
-                      <button
-                        onClick={handleSaveCommerce}
-                        className="self-end px-5 py-2.5 bg-white hover:bg-zinc-100 text-black text-xs font-bold rounded-xl transition-all cursor-pointer focus:outline-none"
-                      >
-                        Save Gateways
-                      </button>
                     </div>
-                  </div>
-                )}
-
-                {/* Skills Tab */}
-                {activeSettingsTab === 'addons' && (
-                  <div className="animate-fadeIn">
-                    <AddonsSettings triggerToast={triggerToast} />
-                  </div>
+                  )
                 )}
 
                 {/* Personal Profile Tab */}
@@ -651,16 +821,29 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
                         <div className="flex flex-col gap-1">
                           <span className="text-sm font-semibold text-zinc-200">Profile Image</span>
                           <div className="flex items-center gap-4 mt-2">
-                            <img 
-                              src="https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?w=200&h=200&fit=crop" 
-                              alt="Profile Avatar" 
-                              className="w-14 h-14 rounded-full object-cover border border-zinc-800 shrink-0"
-                              referrerPolicy="no-referrer"
-                            />
+                            {profileImg ? (
+                              <img 
+                                src={profileImg} 
+                                alt="Profile Avatar" 
+                                className="w-14 h-14 rounded-full object-cover border border-zinc-800 shrink-0"
+                                referrerPolicy="no-referrer"
+                              />
+                            ) : (
+                              <div className="w-14 h-14 rounded-full bg-zinc-900 border border-zinc-850 flex items-center justify-center text-zinc-550 shrink-0">
+                                <UserIcon className="w-6 h-6 text-zinc-500" />
+                              </div>
+                            )}
                             <div className="flex items-center gap-2">
+                              <input 
+                                type="file" 
+                                ref={profileImageInputRef} 
+                                onChange={handleProfileImgChange} 
+                                accept="image/*" 
+                                className="hidden" 
+                              />
                               <button 
                                 type="button"
-                                onClick={() => triggerToast('Uploading image...')}
+                                onClick={() => profileImageInputRef.current?.click()}
                                 className="px-3.5 py-2 bg-white/5 hover:bg-white/10 border border-white/5 text-white text-xs font-bold rounded-xl transition-all flex items-center gap-1.5 cursor-pointer focus:outline-none"
                               >
                                 <Upload className="w-3.5 h-3.5" />
@@ -668,7 +851,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
                               </button>
                               <button 
                                 type="button"
-                                onClick={() => triggerToast('Avatar removed')}
+                                onClick={() => {
+                                  setProfileImg(null);
+                                  triggerToast('Avatar removed');
+                                }}
                                 className="px-3.5 py-2 bg-zinc-950 hover:bg-zinc-900 border border-zinc-900 text-zinc-400 hover:text-white text-xs font-bold rounded-xl transition-all flex items-center gap-1.5 cursor-pointer focus:outline-none"
                               >
                                 <Trash2 className="w-3.5 h-3.5" />
@@ -737,7 +923,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
                           type="button"
                           onClick={() => {
                             setFinishSoundEnabled(!finishSoundEnabled);
-                            triggerToast(`Finish sound ${!finishSoundEnabled ? 'enabled' : 'disabled'}`);
                           }}
                           className={`w-12 h-6 rounded-full p-0.5 transition-colors duration-300 cursor-pointer ${finishSoundEnabled ? 'bg-white' : 'bg-zinc-800'}`}
                         >
@@ -763,7 +948,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
                           type="button"
                           onClick={() => {
                             setGlowFeatureEnabled(!glowFeatureEnabled);
-                            triggerToast(`Multicolor Glow Aura ${!glowFeatureEnabled ? 'enabled' : 'disabled'}`);
                           }}
                           className={`w-12 h-6 rounded-full p-0.5 transition-colors duration-300 cursor-pointer ${glowFeatureEnabled ? 'bg-gradient-to-r from-pink-500 via-purple-500 to-cyan-500' : 'bg-zinc-800'}`}
                         >
